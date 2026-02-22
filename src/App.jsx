@@ -109,82 +109,71 @@ const buildExcelHtml = (students, classes, attendance, notes, filterMonth, payme
     months = [...allMonths].sort((a,b)=>b.localeCompare(a));
   }
 
-  const H = "background:#1a3a00;color:#d0f020;font-weight:bold;font-family:Arial;font-size:12px;padding:8px 12px;border:1px solid #ccc;";
-  const T = "background:#0d1f00;color:#fff;font-weight:bold;font-family:Arial;font-size:12px;padding:8px 12px;border:1px solid #ccc;";
-  const C = "font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
-  const PAY_PAID    = "background:#e6f4e0;color:#2a7a00;font-weight:bold;font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
-  const PAY_UNPAID  = "background:#fde8e8;color:#c00000;font-weight:bold;font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
-  const PAY_PARTIAL = "background:#fff3cd;color:#856404;font-weight:bold;font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
+  const H  = "background:#1a3a00;color:#d0f020;font-weight:bold;font-family:Arial;font-size:12px;padding:9px 14px;border:1px solid #aaa;";
+  const C  = "font-family:Arial;font-size:12px;padding:8px 14px;border:1px solid #ddd;vertical-align:middle;";
+  const C2 = "background:#f6f9f2;font-family:Arial;font-size:12px;padding:8px 14px;border:1px solid #ddd;vertical-align:middle;";
+  const PAY_PAID    = "background:#e6f4e0;color:#2a7a00;font-weight:bold;font-family:Arial;font-size:12px;padding:8px 14px;border:1px solid #ddd;text-align:center;";
+  const PAY_UNPAID  = "background:#fde8e8;color:#c00000;font-weight:bold;font-family:Arial;font-size:12px;padding:8px 14px;border:1px solid #ddd;text-align:center;";
+  const PAY_PARTIAL = "background:#fff3cd;color:#856404;font-weight:bold;font-family:Arial;font-size:12px;padding:8px 14px;border:1px solid #ddd;text-align:center;";
+  const payStyle = s => s==="paid"?PAY_PAID:s==="partial"?PAY_PARTIAL:PAY_UNPAID;
+  const payLabel = s => s==="paid"?"✓ Paid":s==="partial"?"~ Partial":"✗ Unpaid";
+  const getPayStatus = (sid,mk) => (payments||{})[`${sid}-${mk}`]?.status||"unpaid";
+  const row = (cells, style) => `<tr>${cells.map(c=>`<td style="${style}">${c??""}</td>`).join("")}</tr>`;
 
-  const payStyle = (status) => status==="paid" ? PAY_PAID : status==="partial" ? PAY_PARTIAL : PAY_UNPAID;
-  const payLabel = (status) => status==="paid" ? "✓ Paid" : status==="partial" ? "~ Partial" : "✗ Unpaid";
-  const getPayStatus = (sid, mk) => (payments||{})[`${sid}-${mk}`]?.status || "unpaid";
-
-  // ── DASHBOARD SHEET ──────────────────────────────────────────────────────
-  const totalStudents = activeStudents.length;
-  const paidCount   = activeStudents.filter(s=>getPayStatus(s.id,curMK)==="paid").length;
-  const partialCount= activeStudents.filter(s=>getPayStatus(s.id,curMK)==="partial").length;
-  const unpaidCount = activeStudents.filter(s=>getPayStatus(s.id,curMK)==="unpaid").length;
-  const curRevenue  = activeStudents.reduce((sum,s)=>{
-    const recs=(attendance[s.id]||[]).filter(r=>r.date.startsWith(curMK));
-    let owed=0; recs.forEach(r=>{const c=classes.find(x=>x.id===r.classId);owed+=(c?.pricePerClass||40);});
-    return sum+Math.max(MONTHLY_MINIMUM,owed);
-  },0);
-  const totalClsThisMth = activeStudents.reduce((sum,s)=>(attendance[s.id]||[]).filter(r=>r.date.startsWith(curMK)).length+sum,0);
-
-  let dashHtml = `<table x:Name="📊 Dashboard"><thead>`;
-  const dashRows = [
-    ["SUP Dance Studio — Overview", ""],
-    ["", ""],
-    ["Month", mthLabel(curMK)],
-    ["", ""],
-    ["Total Active Students", totalStudents],
-    ["Total Classes This Month", totalClsThisMth],
-    ["Estimated Revenue This Month", `₪${curRevenue.toLocaleString()}`],
-    ["", ""],
-    ["Payment Summary", ""],
-    ["✓ Paid", paidCount],
-    ["~ Partial", partialCount],
-    ["✗ Unpaid", unpaidCount],
-  ];
-  dashRows.forEach((row, ri) => {
-    const isTitle = ri===0;
-    const isSection = row[0]==="Payment Summary" || row[0]==="SUP Dance Studio — Overview";
-    const bg = isTitle ? "background:#1a3a00;color:#d0f020;font-size:16px;font-weight:bold;font-family:Arial;padding:12px 16px;border:1px solid #ccc;" :
-                isSection ? "background:#f0f7e6;color:#1a3a00;font-weight:bold;font-family:Arial;font-size:13px;padding:8px 12px;border:1px solid #ccc;" :
-                row[0]==="" ? "background:#fff;font-family:Arial;font-size:12px;padding:4px;border:none;" :
-                "font-family:Arial;font-size:13px;padding:8px 12px;border:1px solid #ddd;";
-    const valBg = row[0]==="✓ Paid" ? PAY_PAID : row[0]==="~ Partial" ? PAY_PARTIAL : row[0]==="✗ Unpaid" ? PAY_UNPAID : bg;
-    dashHtml += `<tr><td style="${bg}">${row[0]}</td><td style="${valBg}">${row[1]}</td></tr>`;
-  });
-  dashHtml += `</thead></table><br/>`;
-
-  // ── SUMMARY SHEET ────────────────────────────────────────────────────────
-  let summaryHtml = `<table x:Name="📋 Summary"><thead>`;
-  const summaryHeader = ["Student","Phone","Email","Birthday","Join Date","Classes","Enrolled In",...months.map(mk=>mthLabel(mk)),"Total Classes All Time"];
-  summaryHtml += `<tr>${summaryHeader.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
-  activeStudents.forEach(s=>{
-    const enrolledNames = (s.assignedClasses||[]).map(cid=>classes.find(c=>c.id===cid)?.name).filter(Boolean).join(", ");
-    const totalAll = (attendance[s.id]||[]).length;
-    const monthCounts = months.map(mk=>{
-      const n=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)).length;
-      return n>0?n:"";
-    });
-    summaryHtml += `<tr>
-      <td style="${C}">${s.name}</td>
-      <td style="${C}">${s.phone||""}</td>
-      <td style="${C}">${s.email||""}</td>
-      <td style="${C}">${s.birthday||""}</td>
-      <td style="${C}">${s.joinDate||""}</td>
-      <td style="${C}">${(s.assignedClasses||[]).length}</td>
-      <td style="${C}">${enrolledNames}</td>
-      ${monthCounts.map(n=>`<td style="${C};text-align:center;">${n}</td>`).join("")}
-      <td style="${C};font-weight:bold;text-align:center;">${totalAll}</td>
+  // ── TAB 1: STUDENTS ──────────────────────────────────────────────────────
+  let studentsHtml = `<table x:Name="Students"><thead>`;
+  studentsHtml += `<tr>${["Name","Phone","Email","Birthday","Join Date","Classes Enrolled","Total Classes Attended"].map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
+  activeStudents.forEach((s,i) => {
+    const enrolled = (s.assignedClasses||[]).map(cid=>classes.find(c=>c.id===cid)?.name).filter(Boolean).join(", ");
+    const total = (attendance[s.id]||[]).length;
+    const bg = i%2===0 ? C : C2;
+    studentsHtml += `<tr>
+      <td style="${bg};font-weight:600;">${s.name}</td>
+      <td style="${bg}">${s.phone||""}</td>
+      <td style="${bg}">${s.email||""}</td>
+      <td style="${bg}">${s.birthday||""}</td>
+      <td style="${bg}">${s.joinDate||""}</td>
+      <td style="${bg}">${enrolled}</td>
+      <td style="${bg};text-align:center;font-weight:600;">${total}</td>
     </tr>`;
   });
-  summaryHtml += `</thead></table><br/>`;
+  studentsHtml += `</thead></table>`;
 
-  // ── MONTHLY SHEETS ───────────────────────────────────────────────────────
+  // ── TAB 2: CLASSES ───────────────────────────────────────────────────────
+  const activeClasses = classes.filter(c=>!c.archived);
+  let classesHtml = `<table x:Name="Classes"><thead>`;
+  classesHtml += `<tr>${["Class Name","Day","Time","Price per Class","Total Enrolled Students","Total Classes Recorded"].map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
+  activeClasses.forEach((c,i) => {
+    const enrolled = activeStudents.filter(s=>(s.assignedClasses||[]).includes(c.id)).length;
+    const totalSessions = new Set(Object.values(attendance).flatMap(recs=>recs.filter(r=>r.classId===c.id).map(r=>r.date))).size;
+    const bg = i%2===0 ? C : C2;
+    classesHtml += `<tr>
+      <td style="${bg};font-weight:600;">${c.name}</td>
+      <td style="${bg}">${c.day}</td>
+      <td style="${bg}">${c.time}</td>
+      <td style="${bg};text-align:center;">₪${c.pricePerClass||40}</td>
+      <td style="${bg};text-align:center;">${enrolled}</td>
+      <td style="${bg};text-align:center;">${totalSessions}</td>
+    </tr>`;
+  });
+  // enrolled students per class
+  classesHtml += `<tr><td colspan="6" style="padding:6px;border:none;"></td></tr>`;
+  activeClasses.forEach(c => {
+    const enrolled = activeStudents.filter(s=>(s.assignedClasses||[]).includes(c.id));
+    classesHtml += `<tr><td colspan="6" style="background:#2a4800;color:#c8e020;font-weight:bold;font-family:Arial;font-size:12px;padding:9px 14px;border:1px solid #aaa;">${c.name} — Enrolled Students (${enrolled.length})</td></tr>`;
+    enrolled.forEach((s,i) => {
+      const bg = i%2===0 ? C : C2;
+      classesHtml += `<tr>
+        <td style="${bg};font-weight:500;">${s.name}</td>
+        <td style="${bg}">${s.phone||""}</td>
+        <td style="${bg}">${s.email||""}</td>
+        <td style="${bg}" colspan="3"></td>
+      </tr>`;
+    });
+  });
+  classesHtml += `</thead></table>`;
+
+  // ── MONTHLY TABS ─────────────────────────────────────────────────────────
   const monthlySheets = months.map(mk => {
     const label = mthLabel(mk);
     const activeCls = classes.filter(c=>!c.archived);
@@ -192,141 +181,90 @@ const buildExcelHtml = (students, classes, attendance, notes, filterMonth, payme
     const monthCls = [...activeCls,...archivedWithAttend];
 
     let html = `<table x:Name="${label}"><thead>`;
-    const headerCols = ["Student","Phone","Email"];
-    monthCls.forEach(c=>headerCols.push(`${c.name}`));
-    headerCols.push("Total Classes","Amount Owed (₪)","Payment Status","Notes");
-    html += `<tr>${headerCols.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
+    const headers = ["Student","Phone",...monthCls.map(c=>c.name),"Total Classes","Amount Owed","Payment","Notes"];
+    html += `<tr>${headers.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
 
-    // Group students by class
+    // Group by class
     monthCls.forEach(cls => {
       const classStudents = alpha(activeStudents.filter(s=>(s.assignedClasses||[]).includes(cls.id)));
-      if(classStudents.length === 0) return;
-
-      // Class group header row
-      const colSpan = headerCols.length;
-      html += `<tr><td colspan="${colSpan}" style="background:#2a4800;color:#c8e020;font-weight:bold;font-family:Arial;font-size:13px;padding:10px 12px;border:1px solid #ccc;">
-        ${cls.name} — ${cls.day} ${cls.time} · ₪${cls.pricePerClass||40}/class
-      </td></tr>`;
-
-      classStudents.forEach(s=>{
-        let totalClasses=0, totalOwed=0;
+      if(!classStudents.length) return;
+      html += `<tr><td colspan="${headers.length}" style="background:#2a4800;color:#c8e020;font-weight:bold;font-family:Arial;font-size:12px;padding:9px 14px;border:1px solid #aaa;">${cls.name} — ${cls.day} ${cls.time}</td></tr>`;
+      classStudents.forEach((s,i) => {
+        let total=0, owed=0;
         const classCells = monthCls.map(c=>{
-          const count=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length;
-          totalClasses+=count;
-          totalOwed+=count*(c.pricePerClass||40);
-          return `<td style="${C};text-align:center;">${count>0?count:""}</td>`;
+          const n=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length;
+          total+=n; owed+=n*(c.pricePerClass||40);
+          return `<td style="${i%2===0?C:C2};text-align:center;">${n||""}</td>`;
         });
-        const due = Math.max(MONTHLY_MINIMUM,totalOwed);
-        const status = getPayStatus(s.id, mk);
-        const monthNotes=(notes[s.id]||[]).filter(n=>n.ts.startsWith(mk)).map(n=>n.text).join(" | ")||"";
+        const due = Math.max(MONTHLY_MINIMUM,owed);
+        const status = getPayStatus(s.id,mk);
+        const mnotes = (notes[s.id]||[]).filter(n=>n.ts.startsWith(mk)).map(n=>n.text).join(" | ")||"";
+        const bg = i%2===0?C:C2;
         html += `<tr>
-          <td style="${C};font-weight:500;">${s.name}</td>
-          <td style="${C}">${s.phone||""}</td>
-          <td style="${C}">${s.email||""}</td>
+          <td style="${bg};font-weight:500;">${s.name}</td>
+          <td style="${bg}">${s.phone||""}</td>
           ${classCells.join("")}
-          <td style="${C};text-align:center;font-weight:bold;">${totalClasses}</td>
-          <td style="${C};text-align:center;font-weight:bold;">₪${due}</td>
-          <td style="${payStyle(status)};text-align:center;">${payLabel(status)}</td>
-          <td style="${C}">${monthNotes}</td>
+          <td style="${bg};text-align:center;font-weight:600;">${total||""}</td>
+          <td style="${bg};text-align:center;font-weight:600;">${total?`₪${due}`:""}</td>
+          <td style="${payStyle(status)}">${payLabel(status)}</td>
+          <td style="${bg}">${mnotes}</td>
         </tr>`;
       });
     });
 
-    // Students not in any class (just in case)
-    const unassigned = alpha(activeStudents.filter(s=>!monthCls.some(c=>(s.assignedClasses||[]).includes(c.id))));
-    if(unassigned.length > 0) {
-      html += `<tr><td colspan="${headerCols.length}" style="background:#2a2a2a;color:#aaa;font-weight:bold;font-family:Arial;font-size:13px;padding:10px 12px;border:1px solid #ccc;">Other Students</td></tr>`;
-      unassigned.forEach(s=>{
-        const classCells = monthCls.map(()=>`<td style="${C}"></td>`);
-        html += `<tr>
-          <td style="${C};font-weight:500;">${s.name}</td>
-          <td style="${C}">${s.phone||""}</td>
-          <td style="${C}">${s.email||""}</td>
-          ${classCells.join("")}
-          <td style="${C}"></td>
-          <td style="${C}"></td>
-          <td style="${C}"></td>
-          <td style="${C}"></td>
-        </tr>`;
-      });
-    }
-
     // Totals row
-    const totals = monthCls.map(c=>activeStudents.reduce((sum,s)=>sum+(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length,0));
-    const grandTotal = totals.reduce((a,b)=>a+b,0);
+    const T = "background:#0d1f00;color:#fff;font-weight:bold;font-family:Arial;font-size:12px;padding:9px 14px;border:1px solid #aaa;text-align:center;";
     const grandRevenue = activeStudents.reduce((sum,s)=>{
       const recs=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk));
-      let owed=0; recs.forEach(r=>{const c=classes.find(x=>x.id===r.classId);owed+=(c?.pricePerClass||40);});
-      return sum+Math.max(MONTHLY_MINIMUM,owed);
+      let o=0; recs.forEach(r=>{const c=classes.find(x=>x.id===r.classId);o+=(c?.pricePerClass||40);});
+      return sum+Math.max(MONTHLY_MINIMUM,o);
     },0);
+    const colTotals = monthCls.map(c=>activeStudents.reduce((sum,s)=>sum+(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length,0));
+    const grandTotal = colTotals.reduce((a,b)=>a+b,0);
     html += `<tr>
       <td style="${T}">TOTAL</td>
       <td style="${T}"></td>
-      <td style="${T}"></td>
-      ${totals.map(n=>`<td style="${T};text-align:center;">${n}</td>`).join("")}
-      <td style="${T};text-align:center;">${grandTotal}</td>
-      <td style="${T};text-align:center;">₪${grandRevenue.toLocaleString()}</td>
+      ${colTotals.map(n=>`<td style="${T}">${n}</td>`).join("")}
+      <td style="${T}">${grandTotal}</td>
+      <td style="${T}">₪${grandRevenue.toLocaleString()}</td>
       <td style="${T}"></td>
       <td style="${T}"></td>
     </tr>`;
-    html += `</thead></table><br/>`;
+    html += `</thead></table>`;
     return {label, html};
   });
 
-  // ── STUDENT DETAILS SHEET ────────────────────────────────────────────────
-  let detailsHtml = `<table x:Name="👥 Students"><thead>`;
-  const detailsHeader = ["Name","Phone","Email","Birthday","Join Date","Enrolled Classes","Total Classes Attended","Notes"];
-  detailsHtml += `<tr>${detailsHeader.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
-  activeStudents.forEach((s,i)=>{
-    const enrolledNames=(s.assignedClasses||[]).map(cid=>classes.find(c=>c.id===cid)?.name).filter(Boolean).join(", ");
-    const totalAttended=(attendance[s.id]||[]).length;
-    const allNotes=(notes[s.id]||[]).sort((a,b)=>b.ts.localeCompare(a.ts)).map(n=>`[${n.ts.slice(0,10)}] ${n.text}`).join(" | ")||"";
-    const rowBg = i%2===0 ? C : C.replace("font-family","background:#f9f9f9;font-family");
-    detailsHtml += `<tr>
-      <td style="${rowBg};font-weight:500;">${s.name}</td>
-      <td style="${rowBg}">${s.phone||""}</td>
-      <td style="${rowBg}">${s.email||""}</td>
-      <td style="${rowBg}">${s.birthday||""}</td>
-      <td style="${rowBg}">${s.joinDate||""}</td>
-      <td style="${rowBg}">${enrolledNames}</td>
-      <td style="${rowBg};text-align:center;font-weight:bold;">${totalAttended}</td>
-      <td style="${rowBg}">${allNotes}</td>
-    </tr>`;
-  });
-  detailsHtml += `</thead></table><br/>`;
-
-  // ── NOTES SHEET ──────────────────────────────────────────────────────────
-  let notesHtml = `<table x:Name="📝 Notes"><thead>`;
+  // ── NOTES TAB ────────────────────────────────────────────────────────────
+  let notesHtml = `<table x:Name="Notes"><thead>`;
   notesHtml += `<tr>${["Date","Student","Note"].map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
   const allNoteRows = [];
   students.forEach(s=>(notes[s.id]||[]).forEach(n=>allNoteRows.push({name:s.name,text:n.text,ts:n.ts})));
   allNoteRows.sort((a,b)=>b.ts.localeCompare(a.ts));
   allNoteRows.forEach((n,i)=>{
-    const rowBg = i%2===0 ? C : C.replace("font-family","background:#f9f9f9;font-family");
+    const bg = i%2===0?C:C2;
     notesHtml += `<tr>
-      <td style="${rowBg}">${n.ts.slice(0,10)}</td>
-      <td style="${rowBg};font-weight:500;">${n.name}</td>
-      <td style="${rowBg}">${n.text}</td>
+      <td style="${bg}">${n.ts.slice(0,10)}</td>
+      <td style="${bg};font-weight:500;">${n.name}</td>
+      <td style="${bg}">${n.text}</td>
     </tr>`;
   });
-  notesHtml += `</thead></table><br/>`;
+  notesHtml += `</thead></table>`;
 
   // ── ASSEMBLE ─────────────────────────────────────────────────────────────
   let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:x='urn:schemas-microsoft-com:office:excel'><head><meta charset='utf-8'/><xml><x:ExcelWorkbook><x:ExcelWorksheets>`;
-  html += `<x:ExcelWorksheet><x:Name>📊 Dashboard</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
-  html += `<x:ExcelWorksheet><x:Name>📋 Summary</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
+  html += `<x:ExcelWorksheet><x:Name>Students</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
+  html += `<x:ExcelWorksheet><x:Name>Classes</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
   monthlySheets.forEach(s=>{ html+=`<x:ExcelWorksheet><x:Name>${s.label}</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`; });
-  html += `<x:ExcelWorksheet><x:Name>👥 Students</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
-  html += `<x:ExcelWorksheet><x:Name>📝 Notes</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
+  html += `<x:ExcelWorksheet><x:Name>Notes</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
   html += `</x:ExcelWorksheets></x:ExcelWorkbook></xml></head><body>`;
-  html += dashHtml;
-  html += summaryHtml;
+  html += studentsHtml;
+  html += classesHtml;
   monthlySheets.forEach(s=>{ html+=s.html; });
-  html += detailsHtml;
   html += notesHtml;
   html += `</body></html>`;
   return html;
 };
+
 
 // ── FULL DATA EXPORT ──────────────────────────────────────────────────────────
 const exportFullData = (students, classes, attendance, notes, payments, waitlists, reminders, followUps) => {
@@ -475,6 +413,34 @@ export default function App() {
   const [backupBanner, setBackupBanner] = useState(null);
   const [driveStatus, setDriveStatus] = useState(null);
   const [driveLoading, setDriveLoading] = useState(false);
+  const [driveLoadError, setDriveLoadError] = useState(false);
+
+  // Load from Drive on every app open
+  useEffect(() => {
+    if(!gasUrl) return;
+    setDriveLoading(true);
+    fetch("/.netlify/functions/proxy", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"read"})
+    })
+      .then(r=>r.json())
+      .then(data=>{
+        if(data && data.students){
+          setSt(data.students);
+          setCl(data.classes||DEFAULT_CLASSES);
+          setAt(data.attendance||{});
+          setNotes(data.notes||{});
+          setPay(data.payments||{});
+          setWait(data.waitlists||{});
+          setReminders(data.reminders||[]);
+          setFollowUps(data.followUps||{});
+        }
+        setDriveLoading(false);
+      })
+      .catch(()=>{ setDriveLoadError(true); setDriveLoading(false); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
   const [msgDraft,  setMsgDraft]  = useState(null); // {student, type}
   const [yoyMonth,  setYoyMonth]  = useState(monthKey());
   const [darkMode,   setDarkMode]  = useLS("sup9:dark", true);
@@ -790,13 +756,29 @@ export default function App() {
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
       `}</style>
 
-      {/* Drive sync indicator */}
+      {/* Full screen loading splash */}
       {driveLoading&&(
+        <div style={{position:"fixed",inset:0,background:"#0f0f18",zIndex:1000,
+          display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24}}>
+          <img src={LOGO} style={{width:90,height:90,borderRadius:18,marginBottom:8}} alt="logo"/>
+          <div style={{textAlign:"center"}}>
+            <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:28,color:"#f0f0f8",fontWeight:600,marginBottom:8}}>SUP Dance Studio</p>
+            <p style={{fontFamily:"'Outfit',sans-serif",fontSize:14,color:"#7878a0",marginBottom:24}}>Loading your data from Google Drive…</p>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            {[0,1,2].map(i=>(
+              <div key={i} style={{width:10,height:10,borderRadius:"50%",background:"var(--ac)",
+                animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite`}}/>
+            ))}
+          </div>
+        </div>
+      )}
+      {driveLoadError&&!driveLoading&&(
         <div style={{position:"fixed",top:0,left:0,right:0,zIndex:500,padding:"10px 24px",
-          background:"#0d1a00",borderBottom:"1px solid #4a7800",
-          display:"flex",alignItems:"center",gap:10}}>
-          <span style={{color:"var(--ac)",animation:"pulse 1s infinite"}}>⟳</span>
-          <span style={{fontSize:13,color:"var(--mu)"}}>Loading your data from Google Drive…</span>
+          background:"#2e1a00",borderBottom:"1px solid #7a4a00",
+          display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <span style={{fontSize:13,color:"#e0a020"}}>⚠ Could not load from Drive — showing local data</span>
+          <button onClick={()=>setDriveLoadError(false)} style={{background:"none",border:"none",color:"#7878a0",fontSize:18,cursor:"pointer"}}>×</button>
         </div>
       )}
 
