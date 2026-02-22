@@ -214,12 +214,10 @@ const importFullData = (file, callbacks) => {
       callbacks.setClasses(data.classes);
       callbacks.setAttendance(data.attendance || {});
       callbacks.setNotes(data.notes || {});
-      setTimeout(()=>saveToDrive(),300);
       callbacks.setPayments(data.payments || {});
       callbacks.setWaitlists(data.waitlists || {});
       callbacks.setReminders(data.reminders || []);
       callbacks.setFollowUps(data.followUps || {});
-      setTimeout(()=>saveToDrive(),300);
       alert("✓ Data restored successfully from backup!");
     } catch(err) {
       alert("⚠ Failed to import: " + err.message);
@@ -366,7 +364,15 @@ export default function App() {
   const [driveStatus, setDriveStatus] = useState(null);
   const [driveLoading, setDriveLoading] = useState(false);
 
-  // Load live data from Google Drive on first open
+  // ── Auto-save to Drive whenever data changes (debounced 2s) ──────────────
+  const saveTimerRef = useRef(null);
+  useEffect(() => {
+    if(!gasUrl) return;
+    if(saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => { saveToDrive(); }, 2000);
+    return () => clearTimeout(saveTimerRef.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [students, classes, attendance, notes, payments, waitlists, reminders, followUps]);
   useEffect(() => {
     if(!gasUrl) return;
     setDriveLoading(true);
@@ -439,7 +445,6 @@ export default function App() {
   const toggle = (sid,cid,cname,date=todayStr()) => {
     const prev=attendance[sid]||[],idx=prev.findIndex(a=>a.date===date&&a.classId===cid);
     setAt({...attendance,[sid]:idx>=0?prev.filter((_,i)=>i!==idx):[...prev,{date,classId:cid,className:cname}]});
-    setTimeout(()=>saveToDrive(),300);
   };
   const cntP = (sid,pfx) => (attendance[sid]||[]).filter(a=>a.date.startsWith(pfx)).length;
   const markAll = (cid,cname,date=todayStr()) => {
@@ -465,17 +470,14 @@ export default function App() {
   const payKey = (sid,mk) => `${sid}-${mk}`;
   const getPay = (sid,mk) => payments[payKey(sid,mk)] || {status:"unpaid"};
   const setPy  = (sid,mk,data) => setPay({...payments,[payKey(sid,mk)]:data});
-  setTimeout(()=>saveToDrive(),300);
 
   // notes helpers
   const addNote = (sid,text) => {
     if(!text.trim()) return;
     const prev=notes[sid]||[];
     setNotes({...notes,[sid]:[...prev,{id:uid(),ts:new Date().toISOString(),text:text.trim()}]});
-    setTimeout(()=>saveToDrive(),300);
   };
   const deleteNote = (sid,nid) => setNotes({...notes,[sid]:(notes[sid]||[]).filter(n=>n.id!==nid)});
-  setTimeout(()=>saveToDrive(),300);
 
   // alerts
   const alerts = getAlerts(students.filter(s=>!s.archived), attendance, classes);
@@ -534,7 +536,6 @@ export default function App() {
   const addFollowUp = (sid, text) => {
     const prev = followUps[sid]||[];
     setFollowUps({...followUps, [sid]:[...prev, {id:uid(), ts:new Date().toISOString(), text}]});
-    setTimeout(()=>saveToDrive(),300);
   };
 
   // Session history: who attended a specific class on a specific date
@@ -606,10 +607,8 @@ export default function App() {
   const addToWaitlist = (cid,name,phone) => {
     const prev=waitlists[cid]||[];
     setWait({...waitlists,[cid]:[...prev,{id:uid(),name,phone,addedDate:todayStr()}]});
-    setTimeout(()=>saveToDrive(),300);
   };
   const removeFromWaitlist = (cid,wid) => setWait({...waitlists,[cid]:(waitlists[cid]||[]).filter(w=>w.id!==wid)});
-  setTimeout(()=>saveToDrive(),300);
 
   // forms
   const studentFields = (s={}) => (
@@ -1175,7 +1174,6 @@ export default function App() {
           {studentFields()}
           <div style={{display:"flex",gap:10,marginTop:8}}>
             <Btn onClick={()=>{ if(!(form.name||"").trim())return; setSt([...students,{id:uid(),name:form.name,phone:form.phone||"",email:form.email||"",birthday:form.birthday||"",notes:form.notes||"",joinDate:form.joinDate||todayStr(),assignedClasses:form.assignedClasses||[],archived:false}]); setModal(null); setForm({}); }}>Add Member</Btn>
-            setTimeout(()=>saveToDrive(),300);
             <Btn variant="ghost" onClick={()=>setModal(null)}>Cancel</Btn>
           </div>
         </Modal>
@@ -1187,7 +1185,6 @@ export default function App() {
           {studentFields(student)}
           <div style={{display:"flex",gap:10,marginTop:8,flexWrap:"wrap"}}>
             <Btn onClick={()=>{ setSt(students.map(s=>s.id===student.id?{...student,...form}:s)); setModal(null); setForm({}); }}>Save</Btn>
-            setTimeout(()=>saveToDrive(),300);
             <Btn variant="amber" onClick={()=>{ setSt(students.map(s=>s.id===student.id?{...s,archived:!s.archived}:s)); setModal(null); }}>{student.archived?"Restore":"Archive"}</Btn>
             <Btn variant="ghost" onClick={()=>setModal(null)}>Cancel</Btn>
           </div>
@@ -1337,7 +1334,6 @@ export default function App() {
           <Inp label="Price per class (₪)" type="number" value={form.pricePerClass||40} onChange={e=>setForm({...form,pricePerClass:+e.target.value})}/>
           <div style={{display:"flex",gap:10,marginTop:8}}>
             <Btn onClick={()=>{ if(!(form.name||"").trim())return; setCl([...classes,{id:uid(),name:form.name,day:form.day||"Monday",time:form.time||"18:00",pricePerClass:form.pricePerClass||40,archived:false}]); setModal(null); setForm({}); }}>Add Class</Btn>
-            setTimeout(()=>saveToDrive(),300);
             <Btn variant="ghost" onClick={()=>setModal(null)}>Cancel</Btn>
           </div>
         </Modal>
@@ -1358,7 +1354,6 @@ export default function App() {
           <Inp label="Price per class (₪)" type="number" value={form.pricePerClass||40} onChange={e=>setForm({...form,pricePerClass:+e.target.value})}/>
           <div style={{display:"flex",gap:10,marginTop:8}}>
             <Btn onClick={()=>{ setCl(classes.map(c=>c.id===active?{...c,...form}:c)); setModal(null); setForm({}); }}>Save</Btn>
-            setTimeout(()=>saveToDrive(),300);
             <Btn variant="ghost" onClick={()=>setModal(null)}>Cancel</Btn>
           </div>
         </Modal>
