@@ -4,10 +4,28 @@ exports.handler = async (event) => {
   }
 
   const GAS_URL = process.env.GAS_URL;
-  console.log("GAS_URL:", GAS_URL);
-  console.log("Body length:", event.body ? event.body.length : 0);
 
   try {
+    const body = JSON.parse(event.body);
+    const action = body.action;
+
+    // READ: fetch data from Google Sheet and return it to the app
+    if (action === 'read') {
+      const response = await fetch(`${GAS_URL}?action=read`, {
+        method: 'GET',
+        redirect: 'follow',
+      });
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch(e) { data = {}; }
+      return {
+        statusCode: 200,
+        headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      };
+    }
+
+    // SAVE or BACKUP: forward to Google Apps Script
     const response = await fetch(GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -15,15 +33,12 @@ exports.handler = async (event) => {
       redirect: 'follow',
     });
 
-    const text = await response.text();
-    console.log("GAS response status:", response.status);
-    console.log("GAS response:", text.slice(0, 200));
-
     return {
       statusCode: 200,
       headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ ok: true }),
     };
+
   } catch (err) {
     console.log("ERROR:", err.toString());
     return {
