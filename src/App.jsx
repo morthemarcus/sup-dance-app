@@ -455,12 +455,10 @@ export default function App() {
     if(!gasUrl) return;
     try {
       const payload = JSON.stringify({students,classes,attendance,notes,payments,waitlists,reminders,followUps,savedAt:new Date().toISOString()});
-      const excelHtml = buildExcelHtml(students, classes, attendance, notes, null, payments);
-      const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
       fetch("/.netlify/functions/proxy", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"save", json:payload, excel:{ base64, filename:"SUP-Studio.xls" }})
+        body:JSON.stringify({action:"save", json:payload})
       })
         .then(()=>setAutoBackupDone(new Date().toLocaleString()))
         .catch(()=>{});
@@ -471,13 +469,11 @@ export default function App() {
     if(!gasUrl) return;
     try {
       setDriveStatus("sending");
-      const excelHtml = buildExcelHtml(students, classes, attendance, notes, null, payments);
-      const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
-      const filename = `SUP-Backup-${new Date().toISOString().slice(0,10)}.xls`;
+      const payload = JSON.stringify({students,classes,attendance,notes,payments,waitlists,reminders,followUps,savedAt:new Date().toISOString()});
       fetch("/.netlify/functions/proxy", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"backup", filename, base64})
+        body:JSON.stringify({action:"backup", json:payload})
       })
         .then(()=>setDriveStatus("ok"))
         .catch(()=>setDriveStatus("error"));
