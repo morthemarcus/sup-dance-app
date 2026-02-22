@@ -332,7 +332,20 @@ export default function App() {
   const [autoBackupDone, setAutoBackupDone] = useLS("sup9:lastBackup", "");
   const [gasUrl,    setGasUrl]  = useLS("sup9:gasUrl", "");
 
-  const saveToDrive = () => {
+  const [backupBanner, setBackupBanner] = useState(null);
+  const [driveStatus, setDriveStatus] = useState(null);
+  const [driveLoading, setDriveLoading] = useState(false);
+  const [msgDraft,  setMsgDraft]  = useState(null); // {student, type}
+  const [yoyMonth,  setYoyMonth]  = useState(monthKey());
+  const [darkMode,   setDarkMode]  = useLS("sup9:dark", true);
+  const [reminders,  setReminders] = useLS("sup9:reminders", []);
+  const [followUps,  setFollowUps] = useLS("sup9:followups", {});
+  const [revCollapsed, setRevCollapsed] = useLS("sup9:revcol", {yoy:false,drive:false});
+  const [memberSearch, setMemberSearch] = useState("");
+  const [attSearch,    setAttSearch]    = useState("");
+
+  // ── Drive functions ───────────────────────────────────────────────────────
+  const saveToDrive = useCallback(() => {
     if(!gasUrl) return;
     try {
       const payload = JSON.stringify({students,classes,attendance,notes,payments,waitlists,reminders,followUps,savedAt:new Date().toISOString()});
@@ -346,7 +359,7 @@ export default function App() {
         .then(()=>setAutoBackupDone(new Date().toLocaleString()))
         .catch(()=>{});
     } catch(err) { console.error("saveToDrive error", err); }
-  };
+  }, [gasUrl, students, classes, attendance, notes, payments, waitlists, reminders, followUps]);
 
   const manualBackupToDrive = () => {
     if(!gasUrl) return;
@@ -360,48 +373,16 @@ export default function App() {
         .catch(()=>setDriveStatus("error"));
     } catch(err) { console.error("manualBackup error", err); }
   };
-  const [backupBanner, setBackupBanner] = useState(null);
-  const [driveStatus, setDriveStatus] = useState(null);
-  const [driveLoading, setDriveLoading] = useState(false);
 
-  // ── Auto-save to Drive whenever data changes (debounced 2s) ──────────────
+  // Auto-save whenever data changes (debounced 2s)
   const saveTimerRef = useRef(null);
   useEffect(() => {
     if(!gasUrl) return;
     if(saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => { saveToDrive(); }, 2000);
+    saveTimerRef.current = setTimeout(saveToDrive, 2000);
     return () => clearTimeout(saveTimerRef.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [students, classes, attendance, notes, payments, waitlists, reminders, followUps]);
-  useEffect(() => {
-    if(!gasUrl) return;
-    setDriveLoading(true);
-    fetch(`${gasUrl}?action=read`)
-      .then(r=>r.json())
-      .then(data=>{
-        if(data && data.students){
-          setSt(data.students);
-          setCl(data.classes||DEFAULT_CLASSES);
-          setAt(data.attendance||{});
-          setNotes(data.notes||{});
-          setPay(data.payments||{});
-          setWait(data.waitlists||{});
-          setReminders(data.reminders||[]);
-          setFollowUps(data.followUps||{});
-        }
-      })
-      .catch(()=>{})
-      .finally(()=>setDriveLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
-  const [msgDraft,  setMsgDraft]  = useState(null); // {student, type}
-  const [yoyMonth,  setYoyMonth]  = useState(monthKey());
-  const [darkMode,   setDarkMode]  = useLS("sup9:dark", true);
-  const [reminders,  setReminders] = useLS("sup9:reminders", []);
-  const [followUps,  setFollowUps] = useLS("sup9:followups", {});
-  const [revCollapsed, setRevCollapsed] = useLS("sup9:revcol", {yoy:false,drive:false});
-  const [memberSearch, setMemberSearch] = useState("");
-  const [attSearch,    setAttSearch]    = useState("");
 
   // auto-backup on 1st of month
   useEffect(() => {
