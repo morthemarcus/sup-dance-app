@@ -197,27 +197,59 @@ const buildExcelHtml = (students, classes, attendance, notes, filterMonth, payme
     headerCols.push("Total Classes","Amount Owed (₪)","Payment Status","Notes");
     html += `<tr>${headerCols.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
 
-    activeStudents.forEach(s=>{
-      let totalClasses=0, totalOwed=0;
-      const classCells = monthCls.map(c=>{
-        const count=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length;
-        totalClasses+=count;
-        totalOwed+=count*(c.pricePerClass||40);
-        return `<td style="${C};text-align:center;">${count>0?count:""}</td>`;
+    // Group students by class
+    monthCls.forEach(cls => {
+      const classStudents = alpha(activeStudents.filter(s=>(s.assignedClasses||[]).includes(cls.id)));
+      if(classStudents.length === 0) return;
+
+      // Class group header row
+      const colSpan = headerCols.length;
+      html += `<tr><td colspan="${colSpan}" style="background:#2a4800;color:#c8e020;font-weight:bold;font-family:Arial;font-size:13px;padding:10px 12px;border:1px solid #ccc;">
+        ${cls.name} — ${cls.day} ${cls.time} · ₪${cls.pricePerClass||40}/class
+      </td></tr>`;
+
+      classStudents.forEach(s=>{
+        let totalClasses=0, totalOwed=0;
+        const classCells = monthCls.map(c=>{
+          const count=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length;
+          totalClasses+=count;
+          totalOwed+=count*(c.pricePerClass||40);
+          return `<td style="${C};text-align:center;">${count>0?count:""}</td>`;
+        });
+        const due = Math.max(MONTHLY_MINIMUM,totalOwed);
+        const status = getPayStatus(s.id, mk);
+        const monthNotes=(notes[s.id]||[]).filter(n=>n.ts.startsWith(mk)).map(n=>n.text).join(" | ")||"";
+        html += `<tr>
+          <td style="${C};font-weight:500;">${s.name}</td>
+          <td style="${C}">${s.phone||""}</td>
+          <td style="${C}">${s.email||""}</td>
+          ${classCells.join("")}
+          <td style="${C};text-align:center;font-weight:bold;">${totalClasses}</td>
+          <td style="${C};text-align:center;font-weight:bold;">₪${due}</td>
+          <td style="${payStyle(status)};text-align:center;">${payLabel(status)}</td>
+          <td style="${C}">${monthNotes}</td>
+        </tr>`;
       });
-      const due = Math.max(MONTHLY_MINIMUM,totalOwed);
-      const status = getPayStatus(s.id, mk);
-      const monthNotes=(notes[s.id]||[]).filter(n=>n.ts.startsWith(mk)).map(n=>n.text).join(" | ")||"";
-      html += `<tr>
-        <td style="${C};font-weight:500;">${s.name}</td>
-        <td style="${C}">${s.phone||""}</td>
-        <td style="${C}">${s.email||""}</td>
-        ${classCells.join("")}
-        <td style="${C};text-align:center;font-weight:bold;">${totalClasses}</td>
-        <td style="${C};text-align:center;font-weight:bold;">₪${due}</td>
-        <td style="${payStyle(status)};text-align:center;">${payLabel(status)}</td>
-        <td style="${C}">${monthNotes}</td>
-      </tr>`;
+    });
+
+    // Students not in any class (just in case)
+    const unassigned = alpha(activeStudents.filter(s=>!monthCls.some(c=>(s.assignedClasses||[]).includes(c.id))));
+    if(unassigned.length > 0) {
+      html += `<tr><td colspan="${headerCols.length}" style="background:#2a2a2a;color:#aaa;font-weight:bold;font-family:Arial;font-size:13px;padding:10px 12px;border:1px solid #ccc;">Other Students</td></tr>`;
+      unassigned.forEach(s=>{
+        const classCells = monthCls.map(()=>`<td style="${C}"></td>`);
+        html += `<tr>
+          <td style="${C};font-weight:500;">${s.name}</td>
+          <td style="${C}">${s.phone||""}</td>
+          <td style="${C}">${s.email||""}</td>
+          ${classCells.join("")}
+          <td style="${C}"></td>
+          <td style="${C}"></td>
+          <td style="${C}"></td>
+          <td style="${C}"></td>
+        </tr>`;
+      });
+    }
     });
 
     // Totals row
