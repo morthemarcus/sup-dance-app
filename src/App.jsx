@@ -95,96 +95,205 @@ const upcomingBirthdays = (students, days=14) => {
 };
 
 // Excel builder
-const buildExcelHtml = (students, classes, attendance, notes, filterMonth) => {
+const buildExcelHtml = (students, classes, attendance, notes, filterMonth, payments) => {
+  const activeStudents = alpha(students).filter(s=>!s.archived);
+  const curMK = monthKey();
+
   let months;
   if (filterMonth) {
     months = [filterMonth];
   } else {
     const allMonths = new Set();
     Object.values(attendance).forEach(recs=>recs.forEach(r=>allMonths.add(r.date.slice(0,7))));
-    allMonths.add(monthKey());
+    allMonths.add(curMK);
     months = [...allMonths].sort((a,b)=>b.localeCompare(a));
   }
-  const sheets = months.map(mk => {
+
+  const H = "background:#1a3a00;color:#d0f020;font-weight:bold;font-family:Arial;font-size:12px;padding:8px 12px;border:1px solid #ccc;";
+  const T = "background:#0d1f00;color:#fff;font-weight:bold;font-family:Arial;font-size:12px;padding:8px 12px;border:1px solid #ccc;";
+  const C = "font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
+  const PAY_PAID    = "background:#e6f4e0;color:#2a7a00;font-weight:bold;font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
+  const PAY_UNPAID  = "background:#fde8e8;color:#c00000;font-weight:bold;font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
+  const PAY_PARTIAL = "background:#fff3cd;color:#856404;font-weight:bold;font-family:Arial;font-size:12px;padding:7px 12px;border:1px solid #ddd;";
+
+  const payStyle = (status) => status==="paid" ? PAY_PAID : status==="partial" ? PAY_PARTIAL : PAY_UNPAID;
+  const payLabel = (status) => status==="paid" ? "✓ Paid" : status==="partial" ? "~ Partial" : "✗ Unpaid";
+  const getPayStatus = (sid, mk) => (payments||{})[`${sid}-${mk}`]?.status || "unpaid";
+
+  // ── DASHBOARD SHEET ──────────────────────────────────────────────────────
+  const totalStudents = activeStudents.length;
+  const paidCount   = activeStudents.filter(s=>getPayStatus(s.id,curMK)==="paid").length;
+  const partialCount= activeStudents.filter(s=>getPayStatus(s.id,curMK)==="partial").length;
+  const unpaidCount = activeStudents.filter(s=>getPayStatus(s.id,curMK)==="unpaid").length;
+  const curRevenue  = activeStudents.reduce((sum,s)=>{
+    const recs=(attendance[s.id]||[]).filter(r=>r.date.startsWith(curMK));
+    let owed=0; recs.forEach(r=>{const c=classes.find(x=>x.id===r.classId);owed+=(c?.pricePerClass||40);});
+    return sum+Math.max(MONTHLY_MINIMUM,owed);
+  },0);
+  const totalClsThisMth = activeStudents.reduce((sum,s)=>(attendance[s.id]||[]).filter(r=>r.date.startsWith(curMK)).length+sum,0);
+
+  let dashHtml = `<table x:Name="📊 Dashboard"><thead>`;
+  const dashRows = [
+    ["SUP Dance Studio — Overview", ""],
+    ["", ""],
+    ["Month", mthLabel(curMK)],
+    ["", ""],
+    ["Total Active Students", totalStudents],
+    ["Total Classes This Month", totalClsThisMth],
+    ["Estimated Revenue This Month", `₪${curRevenue.toLocaleString()}`],
+    ["", ""],
+    ["Payment Summary", ""],
+    ["✓ Paid", paidCount],
+    ["~ Partial", partialCount],
+    ["✗ Unpaid", unpaidCount],
+  ];
+  dashRows.forEach((row, ri) => {
+    const isTitle = ri===0;
+    const isSection = row[0]==="Payment Summary" || row[0]==="SUP Dance Studio — Overview";
+    const bg = isTitle ? "background:#1a3a00;color:#d0f020;font-size:16px;font-weight:bold;font-family:Arial;padding:12px 16px;border:1px solid #ccc;" :
+                isSection ? "background:#f0f7e6;color:#1a3a00;font-weight:bold;font-family:Arial;font-size:13px;padding:8px 12px;border:1px solid #ccc;" :
+                row[0]==="" ? "background:#fff;font-family:Arial;font-size:12px;padding:4px;border:none;" :
+                "font-family:Arial;font-size:13px;padding:8px 12px;border:1px solid #ddd;";
+    const valBg = row[0]==="✓ Paid" ? PAY_PAID : row[0]==="~ Partial" ? PAY_PARTIAL : row[0]==="✗ Unpaid" ? PAY_UNPAID : bg;
+    dashHtml += `<tr><td style="${bg}">${row[0]}</td><td style="${valBg}">${row[1]}</td></tr>`;
+  });
+  dashHtml += `</thead></table><br/>`;
+
+  // ── SUMMARY SHEET ────────────────────────────────────────────────────────
+  let summaryHtml = `<table x:Name="📋 Summary"><thead>`;
+  const summaryHeader = ["Student","Phone","Email","Birthday","Join Date","Classes","Enrolled In",...months.map(mk=>mthLabel(mk)),"Total Classes All Time"];
+  summaryHtml += `<tr>${summaryHeader.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
+  activeStudents.forEach(s=>{
+    const enrolledNames = (s.assignedClasses||[]).map(cid=>classes.find(c=>c.id===cid)?.name).filter(Boolean).join(", ");
+    const totalAll = (attendance[s.id]||[]).length;
+    const monthCounts = months.map(mk=>{
+      const n=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)).length;
+      return n>0?n:"";
+    });
+    summaryHtml += `<tr>
+      <td style="${C}">${s.name}</td>
+      <td style="${C}">${s.phone||""}</td>
+      <td style="${C}">${s.email||""}</td>
+      <td style="${C}">${s.birthday||""}</td>
+      <td style="${C}">${s.joinDate||""}</td>
+      <td style="${C}">${(s.assignedClasses||[]).length}</td>
+      <td style="${C}">${enrolledNames}</td>
+      ${monthCounts.map(n=>`<td style="${C};text-align:center;">${n}</td>`).join("")}
+      <td style="${C};font-weight:bold;text-align:center;">${totalAll}</td>
+    </tr>`;
+  });
+  summaryHtml += `</thead></table><br/>`;
+
+  // ── MONTHLY SHEETS ───────────────────────────────────────────────────────
+  const monthlySheets = months.map(mk => {
     const label = mthLabel(mk);
     const activeCls = classes.filter(c=>!c.archived);
     const archivedWithAttend = classes.filter(c=>c.archived && Object.values(attendance).some(recs=>recs.some(r=>r.classId===c.id&&r.date.startsWith(mk))));
     const monthCls = [...activeCls,...archivedWithAttend];
-    const rows = [];
-    const headerCols = ["Member","Phone","Email","Birthday"];
-    monthCls.forEach(c=>headerCols.push(`${c.name} (${c.day}) ₪${c.pricePerClass||40}/class`));
-    headerCols.push("Total Classes","Total Owed (₪)","Payment Status","Amount Paid (₪)","Notes this month");
-    rows.push(headerCols);
-    alpha(students).forEach(s=>{
-      const row=[s.name,s.phone||"",s.email||"",s.birthday||""];
-      let totalClasses=0,totalOwed=0;
-      monthCls.forEach(c=>{
+
+    let html = `<table x:Name="${label}"><thead>`;
+    const headerCols = ["Student","Phone","Email"];
+    monthCls.forEach(c=>headerCols.push(`${c.name}`));
+    headerCols.push("Total Classes","Amount Owed (₪)","Payment Status","Notes");
+    html += `<tr>${headerCols.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
+
+    activeStudents.forEach(s=>{
+      let totalClasses=0, totalOwed=0;
+      const classCells = monthCls.map(c=>{
         const count=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length;
-        row.push(count>0?count:"");
         totalClasses+=count;
         totalOwed+=count*(c.pricePerClass||40);
+        return `<td style="${C};text-align:center;">${count>0?count:""}</td>`;
       });
-      const due=Math.max(MONTHLY_MINIMUM,totalOwed);
-      // notes this month
-      const monthNotes=(notes[s.id]||[]).filter(n=>n.ts.startsWith(mk)).map(n=>`[${fmtTs(n.ts)}] ${n.text}`).join(" | ") || "";
-      row.push(totalClasses, due, "", "", monthNotes);
-      rows.push(row);
+      const due = Math.max(MONTHLY_MINIMUM,totalOwed);
+      const status = getPayStatus(s.id, mk);
+      const monthNotes=(notes[s.id]||[]).filter(n=>n.ts.startsWith(mk)).map(n=>n.text).join(" | ")||"";
+      html += `<tr>
+        <td style="${C};font-weight:500;">${s.name}</td>
+        <td style="${C}">${s.phone||""}</td>
+        <td style="${C}">${s.email||""}</td>
+        ${classCells.join("")}
+        <td style="${C};text-align:center;font-weight:bold;">${totalClasses}</td>
+        <td style="${C};text-align:center;font-weight:bold;">₪${due}</td>
+        <td style="${payStyle(status)};text-align:center;">${payLabel(status)}</td>
+        <td style="${C}">${monthNotes}</td>
+      </tr>`;
     });
-    const totRow=["TOTAL","","",""];
-    monthCls.forEach(c=>{
-      const total=alpha(students).reduce((s,st)=>s+(attendance[st.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length,0);
-      totRow.push(total);
-    });
-    totRow.push("","","","","");
-    rows.push(totRow);
-    return {label,rows};
+
+    // Totals row
+    const totals = monthCls.map(c=>activeStudents.reduce((sum,s)=>sum+(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length,0));
+    const grandTotal = totals.reduce((a,b)=>a+b,0);
+    const grandRevenue = activeStudents.reduce((sum,s)=>{
+      const recs=(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk));
+      let owed=0; recs.forEach(r=>{const c=classes.find(x=>x.id===r.classId);owed+=(c?.pricePerClass||40);});
+      return sum+Math.max(MONTHLY_MINIMUM,owed);
+    },0);
+    html += `<tr>
+      <td style="${T}">TOTAL</td>
+      <td style="${T}"></td>
+      <td style="${T}"></td>
+      ${totals.map(n=>`<td style="${T};text-align:center;">${n}</td>`).join("")}
+      <td style="${T};text-align:center;">${grandTotal}</td>
+      <td style="${T};text-align:center;">₪${grandRevenue.toLocaleString()}</td>
+      <td style="${T}"></td>
+      <td style="${T}"></td>
+    </tr>`;
+    html += `</thead></table><br/>`;
+    return {label, html};
   });
 
-  // Notes-by-person sheet
-  const notesRows = [["Student","Note","Timestamp","Date"]];
-  alpha(students).forEach(s=>{
-    (notes[s.id]||[]).sort((a,b)=>b.ts.localeCompare(a.ts)).forEach(n=>{
-      notesRows.push([s.name, n.text, fmtTs(n.ts), n.ts.slice(0,10)]);
-    });
+  // ── STUDENT DETAILS SHEET ────────────────────────────────────────────────
+  let detailsHtml = `<table x:Name="👥 Students"><thead>`;
+  const detailsHeader = ["Name","Phone","Email","Birthday","Join Date","Enrolled Classes","Total Classes Attended","Notes"];
+  detailsHtml += `<tr>${detailsHeader.map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
+  activeStudents.forEach((s,i)=>{
+    const enrolledNames=(s.assignedClasses||[]).map(cid=>classes.find(c=>c.id===cid)?.name).filter(Boolean).join(", ");
+    const totalAttended=(attendance[s.id]||[]).length;
+    const allNotes=(notes[s.id]||[]).sort((a,b)=>b.ts.localeCompare(a.ts)).map(n=>`[${n.ts.slice(0,10)}] ${n.text}`).join(" | ")||"";
+    const rowBg = i%2===0 ? C : C.replace("font-family","background:#f9f9f9;font-family");
+    detailsHtml += `<tr>
+      <td style="${rowBg};font-weight:500;">${s.name}</td>
+      <td style="${rowBg}">${s.phone||""}</td>
+      <td style="${rowBg}">${s.email||""}</td>
+      <td style="${rowBg}">${s.birthday||""}</td>
+      <td style="${rowBg}">${s.joinDate||""}</td>
+      <td style="${rowBg}">${enrolledNames}</td>
+      <td style="${rowBg};text-align:center;font-weight:bold;">${totalAttended}</td>
+      <td style="${rowBg}">${allNotes}</td>
+    </tr>`;
   });
-  // Notes-by-date sheet
+  detailsHtml += `</thead></table><br/>`;
+
+  // ── NOTES SHEET ──────────────────────────────────────────────────────────
+  let notesHtml = `<table x:Name="📝 Notes"><thead>`;
+  notesHtml += `<tr>${["Date","Student","Note"].map(h=>`<th style="${H}">${h}</th>`).join("")}</tr>`;
   const allNoteRows = [];
-  students.forEach(s=>{
-    (notes[s.id]||[]).forEach(n=>allNoteRows.push({name:s.name,text:n.text,ts:n.ts,date:n.ts.slice(0,10)}));
-  });
+  students.forEach(s=>(notes[s.id]||[]).forEach(n=>allNoteRows.push({name:s.name,text:n.text,ts:n.ts})));
   allNoteRows.sort((a,b)=>b.ts.localeCompare(a.ts));
-  const notesByDateRows = [["Date","Student","Note","Full Timestamp"], ...allNoteRows.map(r=>[r.date,r.name,r.text,fmtTs(r.ts)])];
+  allNoteRows.forEach((n,i)=>{
+    const rowBg = i%2===0 ? C : C.replace("font-family","background:#f9f9f9;font-family");
+    notesHtml += `<tr>
+      <td style="${rowBg}">${n.ts.slice(0,10)}</td>
+      <td style="${rowBg};font-weight:500;">${n.name}</td>
+      <td style="${rowBg}">${n.text}</td>
+    </tr>`;
+  });
+  notesHtml += `</thead></table><br/>`;
 
-  let html = `<html xmlns:o=\'urn:schemas-microsoft-com:office:office\' xmlns:x=\'urn:schemas-microsoft-com:office:excel\'><head><meta charset=\'utf-8\'/><xml><x:ExcelWorkbook><x:ExcelWorksheets>`;
-  sheets.forEach(s=>{ html+=`<x:ExcelWorksheet><x:Name>${s.label}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet>`; });
-  html+=`<x:ExcelWorksheet><x:Name>Notes by Person</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
-  html+=`<x:ExcelWorksheet><x:Name>Notes by Date</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
-  html+=`</x:ExcelWorksheets></x:ExcelWorkbook></xml></head><body>`;
-  sheets.forEach(({label,rows})=>{
-    html+=`<table x:Name="${label}"><thead>`;
-    rows.forEach((row,ri)=>{
-      const tag=ri===0||ri===rows.length-1?"th":"td";
-      const bg=ri===0?"background:#1a3a00;color:#d0f020;font-weight:bold":ri===rows.length-1?"background:#111;color:#fff;font-weight:bold":"";
-      html+=`<tr>${row.map(c=>`<${tag} style="${bg};border:1px solid #ccc;padding:6px 10px;font-family:Arial;font-size:12px;">${c??""}</${tag}>`).join("")}</tr>`;
-    });
-    html+=`</thead></table><br/>`;
-  });
-  // Notes by person
-  html+=`<table x:Name="Notes by Person"><thead>`;
-  notesRows.forEach((row,ri)=>{
-    const tag=ri===0?"th":"td";
-    const bg=ri===0?"background:#1a3a00;color:#d0f020;font-weight:bold":"";
-    html+=`<tr>${row.map(c=>`<${tag} style="${bg};border:1px solid #ccc;padding:6px 10px;font-family:Arial;font-size:12px;">${c??""}</${tag}>`).join("")}</tr>`;
-  });
-  html+=`</thead></table><br/>`;
-  // Notes by date
-  html+=`<table x:Name="Notes by Date"><thead>`;
-  notesByDateRows.forEach((row,ri)=>{
-    const tag=ri===0?"th":"td";
-    const bg=ri===0?"background:#1a3a00;color:#d0f020;font-weight:bold":"";
-    html+=`<tr>${row.map(c=>`<${tag} style="${bg};border:1px solid #ccc;padding:6px 10px;font-family:Arial;font-size:12px;">${c??""}</${tag}>`).join("")}</tr>`;
-  });
-  html+=`</thead></table></body></html>`;
+  // ── ASSEMBLE ─────────────────────────────────────────────────────────────
+  let html = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:x='urn:schemas-microsoft-com:office:excel'><head><meta charset='utf-8'/><xml><x:ExcelWorkbook><x:ExcelWorksheets>`;
+  html += `<x:ExcelWorksheet><x:Name>📊 Dashboard</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
+  html += `<x:ExcelWorksheet><x:Name>📋 Summary</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
+  monthlySheets.forEach(s=>{ html+=`<x:ExcelWorksheet><x:Name>${s.label}</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`; });
+  html += `<x:ExcelWorksheet><x:Name>👥 Students</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
+  html += `<x:ExcelWorksheet><x:Name>📝 Notes</x:Name><x:WorksheetOptions/></x:ExcelWorksheet>`;
+  html += `</x:ExcelWorksheets></x:ExcelWorkbook></xml></head><body>`;
+  html += dashHtml;
+  html += summaryHtml;
+  monthlySheets.forEach(s=>{ html+=s.html; });
+  html += detailsHtml;
+  html += notesHtml;
+  html += `</body></html>`;
   return html;
 };
 
@@ -227,7 +336,7 @@ const importFullData = (file, callbacks) => {
 };
 
 const exportExcel = (students, classes, attendance, notes, filterMonth) => {
-  const html = buildExcelHtml(students, classes, attendance, notes, filterMonth);
+  const html = buildExcelHtml(students, classes, attendance, notes, filterMonth, payments);
   const blob=new Blob([html],{type:"application/vnd.ms-excel;charset=utf-8"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
@@ -349,7 +458,7 @@ export default function App() {
     if(!gasUrl) return;
     try {
       const payload = JSON.stringify({students,classes,attendance,notes,payments,waitlists,reminders,followUps,savedAt:new Date().toISOString()});
-      const excelHtml = buildExcelHtml(students, classes, attendance, notes, null);
+      const excelHtml = buildExcelHtml(students, classes, attendance, notes, null, payments);
       const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
       fetch("/.netlify/functions/proxy", {
         method:"POST",
@@ -365,7 +474,7 @@ export default function App() {
     if(!gasUrl) return;
     try {
       setDriveStatus("sending");
-      const excelHtml = buildExcelHtml(students, classes, attendance, notes, null);
+      const excelHtml = buildExcelHtml(students, classes, attendance, notes, null, payments);
       const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
       const filename = `SUP-Backup-${new Date().toISOString().slice(0,10)}.xls`;
       fetch("/.netlify/functions/proxy", {
@@ -404,7 +513,7 @@ export default function App() {
           if(savedUrl){
             setDriveStatus("sending");
             try{
-              const excelHtml=buildExcelHtml(students,classes,attendance,notes,prevMK);
+              const excelHtml=buildExcelHtml(students,classes,attendance,notes,prevMK,payments);
               const base64=btoa(unescape(encodeURIComponent(excelHtml)));
               const resp=await fetch(savedUrl,{method:"POST",body:JSON.stringify({action:"backup",filename:`SUP-${prevMK}.xls`,base64,label})});
               setDriveStatus("ok");setBackupBanner({month:label,ok:true,drive:true});
