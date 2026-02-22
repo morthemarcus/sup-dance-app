@@ -250,7 +250,6 @@ const buildExcelHtml = (students, classes, attendance, notes, filterMonth, payme
         </tr>`;
       });
     }
-    });
 
     // Totals row
     const totals = monthCls.map(c=>activeStudents.reduce((sum,s)=>sum+(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length,0));
