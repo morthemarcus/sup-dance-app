@@ -351,12 +351,11 @@ export default function App() {
       const payload = JSON.stringify({students,classes,attendance,notes,payments,waitlists,reminders,followUps,savedAt:new Date().toISOString()});
       const excelHtml = buildExcelHtml(students, classes, attendance, notes, null);
       const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
-      const form = new FormData();
-      form.append("action", "save");
-      form.append("json", payload);
-      form.append("excel_base64", base64);
-      form.append("excel_filename", "SUP-Studio.xls");
-      fetch(gasUrl, {method:"POST", mode:"no-cors", body:form})
+      fetch("/.netlify/functions/proxy", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"save", json:payload, excel:{ base64, filename:"SUP-Studio.xls" }})
+      })
         .then(()=>setAutoBackupDone(new Date().toLocaleString()))
         .catch(()=>{});
     } catch(err) { console.error("saveToDrive error", err); }
@@ -369,11 +368,11 @@ export default function App() {
       const excelHtml = buildExcelHtml(students, classes, attendance, notes, null);
       const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
       const filename = `SUP-Backup-${new Date().toISOString().slice(0,10)}.xls`;
-      const form = new FormData();
-      form.append("action", "backup");
-      form.append("base64", base64);
-      form.append("filename", filename);
-      fetch(gasUrl, {method:"POST", mode:"no-cors", body:form})
+      fetch("/.netlify/functions/proxy", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"backup", filename, base64})
+      })
         .then(()=>setDriveStatus("ok"))
         .catch(()=>setDriveStatus("error"));
     } catch(err) { console.error("manualBackup error", err); }
@@ -758,7 +757,7 @@ export default function App() {
                 if(gasUrl){
                   setAutoBackupDone("Saving…");
                   const payload=JSON.stringify({students,classes,attendance,notes,payments,waitlists,reminders,followUps,savedAt:new Date().toISOString()});
-                  fetch(gasUrl,{method:"POST",mode:"no-cors",body:JSON.stringify({action:"save",json:payload})})
+                  fetch("/.netlify/functions/proxy",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save",json:payload})})
                     .then(()=>setAutoBackupDone(new Date().toLocaleString()))
                     .catch(()=>setAutoBackupDone("Error - check Drive URL"));
                 }
