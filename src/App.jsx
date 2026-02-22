@@ -351,11 +351,12 @@ export default function App() {
       const payload = JSON.stringify({students,classes,attendance,notes,payments,waitlists,reminders,followUps,savedAt:new Date().toISOString()});
       const excelHtml = buildExcelHtml(students, classes, attendance, notes, null);
       const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
-      fetch(gasUrl, {method:"POST", mode:"no-cors", body:JSON.stringify({
-        action:"save",
-        json:payload,
-        excel:{ base64, filename:"SUP-Studio.xls" }
-      })})
+      const form = new FormData();
+      form.append("action", "save");
+      form.append("json", payload);
+      form.append("excel_base64", base64);
+      form.append("excel_filename", "SUP-Studio.xls");
+      fetch(gasUrl, {method:"POST", mode:"no-cors", body:form})
         .then(()=>setAutoBackupDone(new Date().toLocaleString()))
         .catch(()=>{});
     } catch(err) { console.error("saveToDrive error", err); }
@@ -368,7 +369,11 @@ export default function App() {
       const excelHtml = buildExcelHtml(students, classes, attendance, notes, null);
       const base64 = btoa(unescape(encodeURIComponent(excelHtml)));
       const filename = `SUP-Backup-${new Date().toISOString().slice(0,10)}.xls`;
-      fetch(gasUrl, {method:"POST", mode:"no-cors", body:JSON.stringify({action:"backup", filename, base64})})
+      const form = new FormData();
+      form.append("action", "backup");
+      form.append("base64", base64);
+      form.append("filename", filename);
+      fetch(gasUrl, {method:"POST", mode:"no-cors", body:form})
         .then(()=>setDriveStatus("ok"))
         .catch(()=>setDriveStatus("error"));
     } catch(err) { console.error("manualBackup error", err); }
