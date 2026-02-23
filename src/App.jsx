@@ -1048,7 +1048,10 @@ export default function App() {
                           {retL&&<span style={{fontSize:11,padding:"2px 9px",borderRadius:20,background:"var(--s2)",color:retL.color,border:`1px solid ${retL.color}`,fontWeight:600}}>{retL.label} attendance</span>}
                           {debt>0&&<span style={{fontSize:11,padding:"2px 9px",borderRadius:20,background:"#2e0e0e",color:"#ff7070",border:"1px solid #5a2020",fontWeight:600}}>Owes ₪{debt}</span>}
                         </div>
-                        <p style={{fontSize:12,color:"var(--mu)"}}>{s.phone||""}{s.email?` · ${s.email}`:""}</p>
+                        <p style={{fontSize:12,color:"var(--mu)",marginTop:2}}>
+                          {s.phone && <a href={`https://wa.me/972${s.phone.replace(/^0/,'').replace(/[-\s]/g,'')}`} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()} style={{color:"var(--ac)",textDecoration:"none",marginRight:10}}>{s.phone} 💬</a>}
+                          {s.email && <a href={`mailto:${s.email}`} onClick={e=>e.stopPropagation()} style={{color:"var(--ac)",textDecoration:"none"}}>{s.email}</a>}
+                        </p>
                         <p style={{fontSize:12,color:"var(--mu)",marginTop:3}}>{n} classes this month · ₪{charged} owed this month</p>
                       </div>
                       <span style={{fontSize:20,color:"var(--mu)"}}>›</span>
@@ -1316,11 +1319,19 @@ export default function App() {
             })()}
 
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16,fontSize:13}}>
-              {[["\uD83D\uDCDE",student.phone||"—"],["\u2709",student.email||"—"],["🎂",student.birthday||"—"],["📅","Joined "+fmtDate(student.joinDate||todayStr())]].map(([icon,val])=>(
+              {[["🎂",student.birthday||"—"],["📅","Joined "+fmtDate(student.joinDate||todayStr())]].map(([icon,val])=>(
                 <div key={icon} style={{background:"var(--s2)",padding:"10px 14px",borderRadius:8}}>
                   <span style={{color:"var(--mu)",marginRight:8}}>{icon}</span>{val}
                 </div>
               ))}
+              <div style={{background:"var(--s2)",padding:"10px 14px",borderRadius:8}}>
+                <span style={{color:"var(--mu)",marginRight:8}}>📞</span>
+                {student.phone ? <a href={`https://wa.me/972${student.phone.replace(/^0/,'').replace(/[-\s]/g,'')}`} target="_blank" rel="noreferrer" style={{color:"var(--ac)",textDecoration:"none",fontWeight:500}}>{student.phone} 💬</a> : "—"}
+              </div>
+              <div style={{background:"var(--s2)",padding:"10px 14px",borderRadius:8}}>
+                <span style={{color:"var(--mu)",marginRight:8}}>✉</span>
+                {student.email ? <a href={`mailto:${student.email}`} style={{color:"var(--ac)",textDecoration:"none",fontWeight:500}}>{student.email}</a> : "—"}
+              </div>
             </div>
 
             {/* Payment section */}
