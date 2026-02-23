@@ -148,18 +148,43 @@ function buildXlsx(data) {
   styleWs(nWs, (r)=>r===0?H:r%2===0?A:C);
   XLSX.utils.book_append_sheet(wb, nWs, 'Notes');
 
-  // Write with xlsx-style for color support
   const wbStyled = { SheetNames: wb.SheetNames, Sheets: wb.Sheets };
   return XLSXStyle.write(wbStyled, { type: 'base64', bookType: 'xlsx' });
 }
 
+// ─── הפעולות החדשות — מעבירות ישירות ל-Google Apps Script ───────────────────
+const STUDENT_ACTIONS = ['getStudioData','studentLogin','registerClass','unregisterClass','updateStudentProfile','logPayment'];
+
 exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode:200, headers:{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'Content-Type'}, body:'' };
+  }
+
   if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' };
+
   const GAS_URL = process.env.GAS_URL;
+
   try {
     const body = JSON.parse(event.body);
     const { action } = body;
 
+    // ── פעולות תלמידה — מעבירות ישירות ל-GAS ──
+    if (STUDENT_ACTIONS.includes(action)) {
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        redirect: 'follow'
+      });
+      const text = await res.text();
+      return {
+        statusCode: 200,
+        headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+        body: text
+      };
+    }
+
+    // ── פעולות מורה — קיימות ──
     if (action === 'read') {
       const res = await fetch(`${GAS_URL}?action=read`, { method:'GET', redirect:'follow' });
       const text = await res.text();
@@ -177,7 +202,9 @@ exports.handler = async (event) => {
       await fetch(GAS_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'backup',base64:b64,filename}), redirect:'follow' });
       return { statusCode:200, headers:{'Access-Control-Allow-Origin':'*'}, body:JSON.stringify({ok:true}) };
     }
+
     return { statusCode:400, body:JSON.stringify({ok:false,error:'Unknown action'}) };
+
   } catch(err) {
     console.log('ERROR:', err.toString());
     return { statusCode:500, headers:{'Access-Control-Allow-Origin':'*'}, body:JSON.stringify({ok:false,error:err.toString()}) };
