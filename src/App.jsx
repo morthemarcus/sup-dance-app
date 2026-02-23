@@ -251,7 +251,6 @@ const buildExcelHtml = (students, classes, attendance, notes, filterMonth, payme
         </tr>`;
       });
     }
-    });
 
     // Totals row
     const totals = monthCls.map(c=>activeStudents.reduce((sum,s)=>sum+(attendance[s.id]||[]).filter(r=>r.date.startsWith(mk)&&r.classId===c.id).length,0));
@@ -453,9 +452,64 @@ const PayBadge = ({status}) => {
   return <Pill amber>Partial</Pill>;
 };
 
+// ── ADMIN LOGIN ───────────────────────────────────────────────────────────────
+const ADMIN_PASSWORD = "Shiki1991";
+
+function AdminLogin({ onSuccess }) {
+  const [pw, setPw] = useState("");
+  const [attempts, setAttempts] = useState(0);
+  const [error, setError] = useState("");
+
+  const handleLogin = () => {
+    if (pw === ADMIN_PASSWORD) {
+      sessionStorage.setItem("sup_admin", "1");
+      onSuccess();
+    } else {
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      if (newAttempts >= 3) {
+        setError("יותר מדי ניסיונות שגויים. רעננ/י את הדף כדי לנסות שוב.");
+        setPw("");
+      } else {
+        setError(`סיסמה שגויה. נשארו ${3 - newAttempts} ניסיונות.`);
+        setPw("");
+      }
+    }
+  };
+
+  return (
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"var(--bg)",fontFamily:"'Outfit',sans-serif"}}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap');:root{--bg:#0f0f18;--s2:#22223a;--fg:#f0f0f8;--mu:#7878a0;--ac:#c8e000;--bd:#2a2a44;}`}</style>
+      <div style={{background:"var(--s2)",border:"1px solid var(--bd)",borderRadius:16,padding:"48px 40px",width:340,textAlign:"center"}}>
+        <div style={{fontSize:36,marginBottom:8}}>🔐</div>
+        <div style={{fontSize:22,fontWeight:600,color:"var(--fg)",marginBottom:4}}>SUP Dance</div>
+        <div style={{fontSize:13,color:"var(--mu)",marginBottom:28}}>כניסת מנהל/ת</div>
+        <input
+          type="password"
+          value={pw}
+          onChange={e => setPw(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && attempts < 3 && handleLogin()}
+          placeholder="סיסמה"
+          disabled={attempts >= 3}
+          style={{width:"100%",boxSizing:"border-box",background:"#14141f",border:"1px solid var(--bd)",borderRadius:8,padding:"12px 16px",color:"var(--fg)",fontSize:15,outline:"none",marginBottom:12,textAlign:"right",direction:"rtl"}}
+        />
+        {error && <div style={{color:"#ff6b6b",fontSize:13,marginBottom:12,lineHeight:1.4}}>{error}</div>}
+        <button
+          onClick={handleLogin}
+          disabled={attempts >= 3 || !pw}
+          style={{width:"100%",background: attempts >= 3 ? "#444" : "var(--ac)",color:"#000",border:"none",borderRadius:8,padding:"12px",fontSize:15,fontWeight:600,cursor: attempts >= 3 ? "not-allowed" : "pointer"}}
+        >
+          כניסה
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  if (window.location.pathname === "/student") return <StudentPortal />;
+  const isStudent = window.location.pathname === "/student";
+  const [adminOk, setAdminOk] = useState(!!sessionStorage.getItem("sup_admin"));
   const [students,  setSt] = useLS("sup9:st", DEMO_STUDENTS);
   const [classes,   setCl] = useLS("sup9:cl", DEFAULT_CLASSES);
   const [attendance,setAt] = useLS("sup9:at", DEMO_ATTEND);
@@ -768,6 +822,10 @@ export default function App() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeClassPanel, setActiveClassPanel] = useState(null); // classId of open panel
+
+  // early returns after all hooks
+  if (isStudent) return <StudentPortal />;
+  if (!adminOk) return <AdminLogin onSuccess={() => setAdminOk(true)} />;
 
   return (
     <>
