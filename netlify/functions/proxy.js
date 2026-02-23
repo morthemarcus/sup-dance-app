@@ -1,12 +1,6 @@
-console.log("xlsx-style keys:", Object.keys(require("xlsx-style")));
-const XLSX = (() => {
-  const xs = require('xlsx-style');
-  // xlsx-style v0.8.x wraps xlsx — try multiple export paths
-  if (xs && xs.utils) return xs;
-  if (xs && xs.default && xs.default.utils) return xs.default;
-  // fallback: xlsx-style re-exports xlsx internals
-  return xs;
-})();
+const _xs = require('xlsx-style');
+console.log("utils keys:", Object.keys(_xs.utils || {}));
+const XLSX = _xs;
 
 const MONTHLY_MINIMUM = 100;
 
