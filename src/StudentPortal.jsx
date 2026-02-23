@@ -693,7 +693,7 @@ function Schedule({ student, classes, attendance, onRegister, onUnregister }) {
   const { t } = useLang();
   const [selected, setSelected] = useState(null);
   const enrolled = student.assignedClasses || [];
-  const active = classes.filter((c) => !c.archived);
+  const active = classes.filter((c) => !c.archived && enrolled.includes(c.id));
 
   return (
     <div style={{ padding: "20px 20px 100px" }}>
