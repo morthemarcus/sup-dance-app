@@ -1210,9 +1210,18 @@ export default function StudentApp() {
               notes={myNotes} payments={payments} rsvps={rsvps}
               onNavigate={setScreen} onSync={loadData} syncing={syncing}
               onRsvp={async (classId, date, status) => {
-                await GAS.rsvp(auth.id, classId, date, status);
-                await loadData();
-              }} />
+               // עדכון מיידי בממשק
+              const key = `${auth.id}-${classId}-${date}`;
+  setStudioData(prev => ({
+    ...prev,
+    rsvps: {
+      ...(prev?.rsvps || {}),
+      [key]: { status, updatedAt: new Date().toISOString() }
+    }
+  }));
+  // שמירה ברקע
+  GAS.rsvp(auth.id, classId, date, status);
+}} />
           )}
           {screen === "schedule" && (
             <><Header title={screenTitles.schedule} />
