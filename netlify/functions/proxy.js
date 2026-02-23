@@ -1,3 +1,4 @@
+console.log("xlsx-style keys:", Object.keys(require("xlsx-style")));
 const XLSX = (() => {
   const xs = require('xlsx-style');
   // xlsx-style v0.8.x wraps xlsx — try multiple export paths
