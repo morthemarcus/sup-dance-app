@@ -248,7 +248,7 @@ const exportExcel = (students, classes, attendance, notes, filterMonth) => {
 // Avatar initials helper
 const initials = name => name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
 const avatarColor = name => {
-  const colors = ["#3B82F6","#8B5CF6","#EC4899","#F59E0B","#10B981","#EF4444","#06B6D4","#84CC16"];
+  const colors = ["#c4783c","#7c5cbf","#c45e6a","#5a9e7c","#4a7fc1","#b87c3c","#6b8fbf","#9a6b4b"];
   let h = 0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0;
   return colors[h % colors.length];
 };
@@ -277,28 +277,28 @@ const Inp = ({label,hint,...p}) => {
 
 const Btn = ({children,variant="primary",size="md",...p}) => {
   const V={
-    primary:{background:"#3B82F6",color:"#fff",border:"none"},
-    ghost:{background:"#2C2C2E",color:"#fff",border:"1.5px solid #3A3A3C"},
-    subtle:{background:"#1C1C1E",color:"#8E8E93",border:"1px solid #3A3A3C"},
-    red:{background:"rgba(239,68,68,0.15)",color:"#EF4444",border:"1px solid rgba(239,68,68,0.3)"},
-    amber:{background:"rgba(245,158,11,0.15)",color:"#F59E0B",border:"1px solid rgba(245,158,11,0.3)"},
-    green:{background:"rgba(16,185,129,0.15)",color:"#10B981",border:"1px solid rgba(16,185,129,0.3)"},
-    overdue:{background:"rgba(245,158,11,0.9)",color:"#000",border:"none"},
-    paynow:{background:"#3B82F6",color:"#fff",border:"none"},
+    primary:{background:"var(--ac)",color:"#fff",border:"none",boxShadow:"0 4px 14px var(--ac-glow)"},
+    ghost:{background:"transparent",color:"var(--fg)",border:"1px solid var(--bd2)"},
+    subtle:{background:"var(--bg3)",color:"var(--fg2)",border:"1px solid var(--bd)"},
+    red:{background:"rgba(212,96,74,.12)",color:"var(--red)",border:"1px solid rgba(212,96,74,.25)"},
+    amber:{background:"rgba(212,148,58,.12)",color:"var(--amber)",border:"1px solid rgba(212,148,58,.25)"},
+    green:{background:"rgba(94,184,130,.12)",color:"var(--green)",border:"1px solid rgba(94,184,130,.25)"},
+    overdue:{background:"rgba(212,148,58,.9)",color:"#fff",border:"none",boxShadow:"0 4px 12px rgba(212,148,58,.3)"},
+    paynow:{background:"var(--ac)",color:"#fff",border:"none",boxShadow:"0 4px 14px var(--ac-glow)"},
   };
-  return <button {...p}
-    style={{fontFamily:"'Inter',sans-serif",fontWeight:600,cursor:"pointer",borderRadius:10,
-      fontSize:size==="sm"?12:size==="lg"?16:14,padding:size==="sm"?"7px 14px":size==="lg"?"14px 28px":"10px 18px",
+  return <button {...p} className={"btn-tap "+(p.className||"")}
+    style={{fontFamily:"var(--sans)",fontWeight:600,cursor:"pointer",borderRadius:10,letterSpacing:.2,
+      fontSize:size==="sm"?12:size==="lg"?15:14,padding:size==="sm"?"6px 12px":size==="lg"?"13px 24px":"9px 16px",
       transition:"all .15s",whiteSpace:"nowrap",...(V[variant]||V.primary),...p.style}}>{children}</button>;
 };
 
 const Pill = ({children,on,amber,red,blue}) => (
-  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",borderRadius:20,fontSize:11,fontWeight:600,
-    fontFamily:"'Inter',sans-serif",
-    background:on?"rgba(16,185,129,0.15)":amber?"rgba(245,158,11,0.15)":red?"rgba(239,68,68,0.15)":blue?"rgba(59,130,246,0.15)":"#2C2C2E",
-    color:on?"#10B981":amber?"#F59E0B":red?"#EF4444":blue?"#3B82F6":"#8E8E93",
-    border:`1px solid ${on?"rgba(16,185,129,0.3)":amber?"rgba(245,158,11,0.3)":red?"rgba(239,68,68,0.3)":blue?"rgba(59,130,246,0.3)":"#3A3A3C"}`}}>
-    {on&&<span style={{width:6,height:6,borderRadius:"50%",background:"#10B981",display:"inline-block"}}/>}
+  <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 9px",borderRadius:6,fontSize:10,fontWeight:700,
+    letterSpacing:.7,textTransform:"uppercase",fontFamily:"var(--sans)",
+    background:on?"rgba(94,184,130,0.12)":amber?"rgba(212,148,58,0.12)":red?"rgba(212,96,74,0.12)":blue?"rgba(196,120,60,0.12)":"var(--bg3)",
+    color:on?"var(--green)":amber?"var(--amber)":red?"var(--red)":blue?"var(--ac)":"var(--mu)",
+    border:`1px solid ${on?"rgba(94,184,130,0.25)":amber?"rgba(212,148,58,0.25)":red?"rgba(212,96,74,0.25)":blue?"rgba(196,120,60,0.25)":"var(--bd)"}`}}>
+    {on&&<span style={{width:5,height:5,borderRadius:"50%",background:"var(--green)",display:"inline-block"}}/>}
     {children}
   </span>
 );
@@ -337,77 +337,127 @@ function AdminLogin({ onSuccess }) {
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState("");
   const [lang, setLang] = useState("he");
+  const [focused, setFocused] = useState(false);
   const isHe = lang === "he";
   const t = {
-    title: isHe ? "SUP Dance" : "SUP Dance",
-    subtitle: isHe ? "כניסת מנהל/ת" : "Admin Login",
+    subtitle: isHe ? "כניסת מנהל" : "Admin Access",
     placeholder: isHe ? "סיסמה" : "Password",
-    loginBtn: isHe ? "כניסה" : "Sign In",
-    err3: isHe ? "יותר מדי ניסיונות שגויים. רעננ/י את הדף כדי לנסות שוב." : "Too many failed attempts. Refresh the page to try again.",
-    err: (n) => isHe ? `סיסמה שגויה. נשארו ${n} ניסיונות.` : `Wrong password. ${n} attempts remaining.`,
+    loginBtn: isHe ? "כניסה" : "Enter",
+    err3: isHe ? "יותר מדי ניסיונות. רענן את הדף." : "Too many attempts. Refresh to retry.",
+    err: (n) => isHe ? `סיסמה שגויה · ${n} ניסיונות נותרו` : `Wrong password · ${n} left`,
   };
   const handleLogin = () => {
     if (pw === ADMIN_PASSWORD) { sessionStorage.setItem("sup_admin","1"); onSuccess(); }
     else {
-      const newAttempts = attempts + 1; setAttempts(newAttempts);
-      if (newAttempts >= 3) { setError(t.err3); setPw(""); }
-      else { setError(t.err(3-newAttempts)); setPw(""); }
+      const n = attempts + 1; setAttempts(n);
+      if (n >= 3) { setError(t.err3); setPw(""); }
+      else { setError(t.err(3-n)); setPw(""); }
     }
   };
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
         *{margin:0;padding:0;box-sizing:border-box;}
         html,body,#root{height:100%;width:100%;}
-        body{background:#000;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
-        @keyframes loginIn{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:none}}
-        @keyframes logoSpin{from{transform:rotate(-8deg) scale(.8);opacity:0}to{transform:none;opacity:1}}
-        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
-        .login-shake{animation:shake .4s ease;}
+        body{background:#12100e;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+        @keyframes loginIn{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+        @keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+        @keyframes grain{0%,100%{transform:translate(0,0)}25%{transform:translate(-2%,-1%)}50%{transform:translate(1%,2%)}75%{transform:translate(-1%,1%)}}
+        .ls{animation:loginIn .7s cubic-bezier(.16,1,.3,1) both;}
+        .ls-shake{animation:shake .4s ease;}
+        .logo-float{animation:logoFloat 4s ease-in-out infinite;}
+        .grain::after{content:'';position:fixed;inset:-50%;width:200%;height:200%;
+          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+          opacity:.035;pointer-events:none;z-index:0;animation:grain 8s steps(2) infinite;}
       `}</style>
-      <div style={{position:"fixed",inset:0,background:"#000",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter',sans-serif"}}>
-        {/* Subtle gradient orbs in background */}
-        <div style={{position:"absolute",top:"20%",left:"50%",transform:"translateX(-50%)",width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,rgba(59,130,246,0.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
-        <div style={{position:"absolute",bottom:"20%",right:"10%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,0.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+      <div className="grain" style={{position:"fixed",inset:0,background:"#12100e",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',sans-serif"}}>
         
-        {/* Lang toggle top right */}
-        <div style={{position:"absolute",top:20,right:20}}>
-          <div style={{display:"flex",background:"#1C1C1E",borderRadius:10,padding:3,border:"1px solid #2C2C2E"}}>
+        {/* Warm accent blobs */}
+        <div style={{position:"absolute",top:"15%",left:"20%",width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,rgba(196,120,60,0.12) 0%,transparent 70%)",pointerEvents:"none",zIndex:1}}/>
+        <div style={{position:"absolute",bottom:"20%",right:"15%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(160,100,50,0.08) 0%,transparent 70%)",pointerEvents:"none",zIndex:1}}/>
+
+        {/* Lang toggle */}
+        <div style={{position:"absolute",top:24,right:24,zIndex:10}}>
+          <div style={{display:"flex",background:"rgba(255,255,255,.05)",borderRadius:8,padding:2,border:"1px solid rgba(255,255,255,.08)"}}>
             {["he","en"].map(l=>(
               <button key={l} onClick={()=>setLang(l)}
-                style={{padding:"6px 12px",borderRadius:7,border:"none",background:lang===l?"#3B82F6":"transparent",color:lang===l?"#fff":"#8E8E93",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s"}}>
+                style={{padding:"5px 12px",borderRadius:6,border:"none",background:lang===l?"rgba(196,120,60,0.9)":"transparent",color:lang===l?"#fff":"rgba(255,255,255,.4)",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",letterSpacing:.5,transition:"all .2s"}}>
                 {l==="he"?"עב":"EN"}
               </button>
             ))}
           </div>
         </div>
 
-        <div style={{width:"100%",maxWidth:380,padding:"0 24px",animation:"loginIn .6s cubic-bezier(.16,1,.3,1) both"}}>
-          {/* Logo */}
-          <div style={{textAlign:"center",marginBottom:40}}>
-            <div style={{width:80,height:80,borderRadius:22,background:"linear-gradient(135deg,#3B82F6,#8B5CF6)",margin:"0 auto 16px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,boxShadow:"0 20px 60px rgba(59,130,246,0.3)",animation:"logoSpin .7s cubic-bezier(.16,1,.3,1) .1s both"}}>💃</div>
-            <div style={{fontSize:28,fontWeight:800,color:"#fff",letterSpacing:-.5,marginBottom:4}}>SUP Dance</div>
-            <div style={{fontSize:14,color:"#8E8E93"}}>{t.subtitle}</div>
+        {/* Main card */}
+        <div className="ls" style={{width:"100%",maxWidth:360,padding:"0 28px",position:"relative",zIndex:2}}>
+          
+          {/* Logo area */}
+          <div style={{textAlign:"center",marginBottom:48}}>
+            <div className="logo-float" style={{display:"inline-flex",width:72,height:72,borderRadius:18,background:"linear-gradient(145deg,#c4783c,#a0532a)",alignItems:"center",justifyContent:"center",fontSize:32,marginBottom:20,boxShadow:"0 20px 50px rgba(196,120,60,0.3)"}}>
+              💃
+            </div>
+            <h1 style={{fontFamily:"'Instrument Serif',serif",fontSize:34,fontWeight:400,color:"#f0e6d8",letterSpacing:-.5,lineHeight:1,marginBottom:8}}>
+              SUP Dance
+            </h1>
+            <p style={{fontSize:12,color:"rgba(240,230,216,.4)",letterSpacing:2,textTransform:"uppercase",fontWeight:500}}>{t.subtitle}</p>
           </div>
 
-          {/* Card */}
-          <div style={{background:"#1C1C1E",border:"1px solid #2C2C2E",borderRadius:24,padding:"28px 24px"}}>
-            <input
-              key={lang}
-              type="password" value={pw}
-              onChange={e=>setError("")||setPw(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&attempts<3&&handleLogin()}
-              placeholder={t.placeholder}
-              disabled={attempts>=3}
-              dir={isHe?"rtl":"ltr"}
-              style={{width:"100%",background:"#2C2C2E",border:`1.5px solid ${error?"#EF4444":"#3A3A3C"}`,borderRadius:14,padding:"16px 18px",color:"#fff",fontSize:16,outline:"none",marginBottom:12,textAlign:isHe?"right":"left",fontFamily:"'Inter',sans-serif",transition:"border-color .2s"}}/>
-            {error&&<div className="login-shake" style={{color:"#EF4444",fontSize:13,marginBottom:12,lineHeight:1.5,textAlign:isHe?"right":"left",direction:isHe?"rtl":"ltr"}}>{error}</div>}
+          {/* Form */}
+          <div style={{background:"rgba(255,255,255,.03)",border:"1px solid rgba(255,255,255,.07)",borderRadius:16,padding:"24px 20px"}}>
+            <div style={{position:"relative",marginBottom:error?10:16}}>
+              <input
+                type="password" value={pw}
+                onChange={e=>{setError(""); setPw(e.target.value);}}
+                onKeyDown={e=>e.key==="Enter"&&attempts<3&&pw&&handleLogin()}
+                onFocus={()=>setFocused(true)}
+                onBlur={()=>setFocused(false)}
+                placeholder={t.placeholder}
+                disabled={attempts>=3}
+                dir={isHe?"rtl":"ltr"}
+                style={{
+                  width:"100%",
+                  background:"rgba(255,255,255,.05)",
+                  border:`1px solid ${error?"rgba(239,68,68,.5)":focused?"rgba(196,120,60,.6)":"rgba(255,255,255,.1)"}`,
+                  borderRadius:10,
+                  padding:"14px 16px",
+                  color:"#f0e6d8",
+                  fontSize:15,
+                  outline:"none",
+                  textAlign:isHe?"right":"left",
+                  fontFamily:"'DM Sans',sans-serif",
+                  transition:"border-color .2s",
+                  letterSpacing:pw?2:0,
+                }}/>
+            </div>
+            {error&&(
+              <div className="ls-shake" style={{fontSize:12,color:"rgba(239,100,80,.9)",marginBottom:14,textAlign:isHe?"right":"left",direction:isHe?"rtl":"ltr",letterSpacing:.2}}>
+                {error}
+              </div>
+            )}
             <button onClick={handleLogin} disabled={attempts>=3||!pw}
-              style={{width:"100%",background:attempts>=3?"#3A3A3C":"#3B82F6",color:"#fff",border:"none",borderRadius:14,padding:"16px",fontSize:16,fontWeight:700,cursor:attempts>=3?"not-allowed":"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s",boxShadow:attempts>=3||!pw?"none":"0 8px 24px rgba(59,130,246,0.3)"}}>
+              style={{
+                width:"100%",
+                background:attempts>=3||!pw?"rgba(255,255,255,.06)":"linear-gradient(135deg,#c4783c,#a0532a)",
+                color:attempts>=3||!pw?"rgba(255,255,255,.25)":"#fff",
+                border:"none",
+                borderRadius:10,
+                padding:"14px",
+                fontSize:15,
+                fontWeight:600,
+                cursor:attempts>=3||!pw?"not-allowed":"pointer",
+                fontFamily:"'DM Sans',sans-serif",
+                letterSpacing:.3,
+                transition:"all .2s",
+                boxShadow:attempts>=3||!pw?"none":"0 8px 24px rgba(196,120,60,.35)",
+              }}>
               {t.loginBtn}
             </button>
           </div>
+
+          {/* Bottom mark */}
+          <p style={{textAlign:"center",marginTop:24,fontSize:11,color:"rgba(255,255,255,.18)",letterSpacing:1.5,textTransform:"uppercase"}}>Studio Manager</p>
         </div>
       </div>
     </>
@@ -563,9 +613,9 @@ export default function App() {
   };
   const retentionLabel = (pct) => {
     if(pct===null) return null;
-    if(pct>=80) return {label:"High",color:"#10B981"};
-    if(pct>=50) return {label:"Medium",color:"#F59E0B"};
-    return {label:"Low",color:"#EF4444"};
+    if(pct>=80) return {label:"High",color:"var(--green)"};
+    if(pct>=50) return {label:"Medium",color:"var(--amber)"};
+    return {label:"Low",color:"var(--red)"};
   };
 
   const getDebt = (sid) => {
@@ -666,7 +716,7 @@ export default function App() {
       <div style={{marginBottom:14}}>
         <label style={{display:"block",fontSize:11,color:"var(--mu)",marginBottom:6,fontWeight:500}}>General Notes</label>
         <textarea value={form.notes??s.notes??""} onChange={e=>setForm({...form,notes:e.target.value})}
-          style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",boxSizing:"border-box",fontFamily:"'Inter',sans-serif",minHeight:80,resize:"vertical"}}/>
+          style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",boxSizing:"border-box",fontFamily:"var(--sans)",minHeight:80,resize:"vertical"}}/>
       </div>
     </>
   );
@@ -691,91 +741,144 @@ export default function App() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
         * { margin:0; padding:0; box-sizing:border-box; }
         html, body, #root { height:100%; }
-        body { background:var(--bg); color:var(--fg); font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; transition:background .3s, color .3s; }
-        
-        /* ── DARK MODE (default) ── */
+        body { background:var(--bg); color:var(--fg); font-family:'DM Sans',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; transition:background .4s, color .4s; }
+
+        /* ═══════════════════════════════
+           DARK — warm charcoal studio
+        ═══════════════════════════════ */
         :root {
-          --bg: #000000;
-          --bg2: #1C1C1E;
-          --bg3: #2C2C2E;
-          --bd: #2C2C2E;
-          --bd2: #3A3A3C;
-          --fg: #FFFFFF;
-          --fg2: #E5E5EA;
-          --mu: #8E8E93;
-          --ac: #3B82F6;
-          --ac-hover: #2563EB;
-          --green: #10B981;
-          --amber: #F59E0B;
-          --red: #EF4444;
-          --card-shadow: 0 2px 20px rgba(0,0,0,.5);
-          --header-bg: rgba(0,0,0,0.92);
-          --nav-bg: rgba(0,0,0,0.95);
-        }
-        /* ── LIGHT MODE ── */
-        :root[data-theme="light"] {
-          --bg: #F2F2F7;
-          --bg2: #FFFFFF;
-          --bg3: #E5E5EA;
-          --bd: #E5E5EA;
-          --bd2: #C7C7CC;
-          --fg: #000000;
-          --fg2: #1C1C1E;
-          --mu: #6D6D72;
-          --ac: #007AFF;
-          --ac-hover: #0056CC;
-          --green: #34C759;
-          --amber: #FF9500;
-          --red: #FF3B30;
-          --card-shadow: 0 2px 12px rgba(0,0,0,.08);
-          --header-bg: rgba(242,242,247,0.92);
-          --nav-bg: rgba(242,242,247,0.95);
+          --bg:       #12100e;
+          --bg2:      #1c1915;
+          --bg3:      #252118;
+          --bd:       rgba(255,255,255,.07);
+          --bd2:      rgba(255,255,255,.12);
+          --bd-acc:   rgba(196,120,60,.5);
+          --fg:       #f0e6d8;
+          --fg2:      #c8bfb2;
+          --mu:       rgba(240,230,216,.38);
+          --ac:       #c4783c;
+          --ac2:      #a0532a;
+          --ac-glow:  rgba(196,120,60,.28);
+          --green:    #5eb882;
+          --amber:    #d4943a;
+          --red:      #d4604a;
+          --card-shadow: 0 2px 24px rgba(0,0,0,.5);
+          --header-bg:  rgba(18,16,14,.92);
+          --nav-bg:     rgba(18,16,14,.97);
+          --serif: 'Instrument Serif', serif;
+          --sans:  'DM Sans', sans-serif;
+          --grain-opacity: .04;
         }
 
-        ::-webkit-scrollbar { width:4px; }
+        /* ═══════════════════════════════
+           LIGHT — warm cream studio
+        ═══════════════════════════════ */
+        :root[data-theme="light"] {
+          --bg:       #f5efe6;
+          --bg2:      #fdf8f2;
+          --bg3:      #ede6da;
+          --bd:       rgba(100,70,40,.1);
+          --bd2:      rgba(100,70,40,.18);
+          --bd-acc:   rgba(160,83,42,.4);
+          --fg:       #1e1510;
+          --fg2:      #3d2e1e;
+          --mu:       rgba(30,21,16,.42);
+          --ac:       #a0532a;
+          --ac2:      #7e3f1a;
+          --ac-glow:  rgba(160,83,42,.2);
+          --green:    #2e8a52;
+          --amber:    #b07030;
+          --red:      #c0402e;
+          --card-shadow: 0 2px 16px rgba(100,60,20,.1);
+          --header-bg:  rgba(245,239,230,.92);
+          --nav-bg:     rgba(245,239,230,.97);
+          --grain-opacity: .025;
+        }
+
+        /* ─── Scrollbar ─── */
+        ::-webkit-scrollbar { width:3px; }
         ::-webkit-scrollbar-track { background:transparent; }
         ::-webkit-scrollbar-thumb { background:var(--bd2); border-radius:2px; }
         select option { background:var(--bg2); color:var(--fg); }
 
-        /* ── ANIMATIONS ── */
-        @keyframes mIn { from{opacity:0;transform:scale(.97) translateY(10px)} to{opacity:1;transform:none} }
-        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-        @keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
-        @keyframes slideUp { from{transform:translateY(100%);opacity:0} to{transform:none;opacity:1} }
-        @keyframes pageSlideLeft { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:none} }
-        @keyframes pageSlideRight { from{opacity:0;transform:translateX(-28px)} to{opacity:1;transform:none} }
-        @keyframes pageFade { from{opacity:0;transform:translateY(12px) scale(.99)} to{opacity:1;transform:none} }
-        @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
-        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
-        @keyframes shimmer { from{background-position:-200% 0} to{background-position:200% 0} }
+        /* ─── Grain texture overlay ─── */
+        #root::before {
+          content:'';
+          position:fixed;inset:0;
+          background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          opacity:var(--grain-opacity);
+          pointer-events:none;
+          z-index:9999;
+        }
 
-        .page-enter { animation: pageFade .35s cubic-bezier(.16,1,.3,1) both; }
-        .card-item { animation: cardIn .4s cubic-bezier(.16,1,.3,1) both; }
-        .card-item:nth-child(1) { animation-delay: 0ms }
-        .card-item:nth-child(2) { animation-delay: 40ms }
-        .card-item:nth-child(3) { animation-delay: 80ms }
-        .card-item:nth-child(4) { animation-delay: 120ms }
-        .card-item:nth-child(5) { animation-delay: 160ms }
-        .card-item:nth-child(6) { animation-delay: 200ms }
-        .card-item:nth-child(n+7) { animation-delay: 240ms }
+        /* ─── Typography classes ─── */
+        .serif { font-family:var(--serif); }
+        .serif-italic { font-family:var(--serif); font-style:italic; }
 
-        .btn-tap:active { transform: scale(.96); }
-        .row-tap:active { opacity:.7; }
+        /* ─── Animations ─── */
+        @keyframes mIn      { from{opacity:0;transform:scale(.97) translateY(8px)} to{opacity:1;transform:none} }
+        @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+        @keyframes slideIn  { from{transform:translateX(100%)} to{transform:translateX(0)} }
+        @keyframes slideUp  { from{transform:translateY(100%);opacity:0} to{transform:none;opacity:1} }
+        @keyframes pageFade { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:none} }
+        @keyframes cardIn   { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+
+        .page-enter { animation: pageFade .4s cubic-bezier(.16,1,.3,1) both; }
+        .card-item  { animation: cardIn .45s cubic-bezier(.16,1,.3,1) both; }
+        .card-item:nth-child(1){animation-delay:0ms}
+        .card-item:nth-child(2){animation-delay:50ms}
+        .card-item:nth-child(3){animation-delay:100ms}
+        .card-item:nth-child(4){animation-delay:150ms}
+        .card-item:nth-child(5){animation-delay:200ms}
+        .card-item:nth-child(n+6){animation-delay:250ms}
+
+        /* ─── Interactive states ─── */
+        .btn-tap:active  { transform:scale(.95); }
+        .row-tap:active  { opacity:.6; }
+        .card-press      { transition:transform .12s; }
+        .card-press:active { transform:scale(.985); }
+
+        /* ─── Nav labels ─── */
+        .nav-label { font-size:10px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; margin-top:3px; }
+
+        /* ─── Input focus ring ─── */
+        .sup-input { 
+          background:var(--bg3) !important; 
+          border:1px solid var(--bd2) !important; 
+          color:var(--fg) !important;
+          border-radius:10px !important;
+          transition:border-color .2s !important;
+        }
+        .sup-input:focus { border-color:var(--ac) !important; outline:none !important; }
+        .sup-input::placeholder { color:var(--mu) !important; }
+
+        /* ─── Status pills ─── */
+        .pill-green { background:rgba(94,184,130,.12); color:var(--green); border:1px solid rgba(94,184,130,.25); }
+        .pill-amber { background:rgba(212,148,58,.12); color:var(--amber); border:1px solid rgba(212,148,58,.25); }
+        .pill-red   { background:rgba(212,96,74,.12);  color:var(--red);   border:1px solid rgba(212,96,74,.25); }
+        .pill-mu    { background:var(--bg3);            color:var(--mu);    border:1px solid var(--bd); }
+
+        /* ─── Section label ─── */
+        .sec-label {
+          font-size:10px; font-weight:700; letter-spacing:1.8px; 
+          text-transform:uppercase; color:var(--mu); margin-bottom:10px;
+        }
       `}</style>
 
       {/* MAIN CONTAINER */}
-      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"var(--bg)",paddingBottom:90,position:"relative"}}>
+      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"var(--bg)",paddingBottom:100,position:"relative"}}>
 
         {/* TOP HEADER */}
-        <div style={{position:"sticky",top:0,zIndex:100,background:"var(--header-bg)",backdropFilter:"blur(20px)",borderBottom:"1px solid var(--bd)",padding:"16px 20px 12px"}}>
+        <div style={{position:"sticky",top:0,zIndex:100,background:"var(--header-bg)",backdropFilter:"blur(24px) saturate(180%)",borderBottom:"1px solid var(--bd)",padding:"14px 20px 10px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <img src={LOGO} alt="SUP" style={{width:32,height:32,objectFit:"contain"}}/>
-              <span style={{fontSize:20,fontWeight:800,letterSpacing:-.5,color:"var(--fg)"}}>SUP</span>
-              <span style={{fontSize:12,color:"var(--mu)",marginTop:2}}>Dance Studio</span>
+              <span style={{fontFamily:"var(--serif)",fontSize:22,fontWeight:400,letterSpacing:-.3,color:"var(--fg)"}}>SUP</span>
+              <span style={{fontSize:10,color:"var(--mu)",marginTop:3,letterSpacing:1.2,textTransform:"uppercase",fontWeight:600}}>Dance Studio</span>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               {alerts.length>0&&(
@@ -787,7 +890,7 @@ export default function App() {
               <div style={{display:"flex",background:"var(--bg2)",borderRadius:10,padding:2,border:"1px solid var(--bd)"}}>
                 {["he","en"].map(l=>(
                   <button key={l} onClick={()=>setLangAndStore(l)}
-                    style={{padding:"5px 9px",borderRadius:7,border:"none",background:lang===l?"var(--ac)":"transparent",color:lang===l?"#fff":"var(--mu)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s"}}>
+                    style={{padding:"5px 9px",borderRadius:7,border:"none",background:lang===l?"var(--ac)":"transparent",color:lang===l?"#fff":"var(--mu)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)",transition:"all .2s"}}>
                     {l==="he"?"עב":"EN"}
                   </button>
                 ))}
@@ -802,7 +905,7 @@ export default function App() {
         {/* PAGE TITLE */}
         {view!=="today"&&(
           <div style={{padding:"20px 20px 4px"}}>
-            <h1 style={{fontSize:28,fontWeight:800,letterSpacing:-.5}}>
+            <h1 style={{fontFamily:"var(--serif)",fontSize:32,fontWeight:400,letterSpacing:-.5,color:"var(--fg)"}}>
               {view==="members"?(isHe?"תלמידים":"Students"):view==="attendance"?(isHe?"נוכחות":"Attendance"):view==="accounting"?(isHe?"תשלומים":"Payments"):view==="alerts"?(isHe?"התראות":"Alerts"):view==="classes"?(isHe?"שיעורים":"Classes"):view==="sessions"?(isHe?"היסטוריה":"Session History"):""}
             </h1>
           </div>
@@ -812,8 +915,8 @@ export default function App() {
         {view==="today"&&(
           <div key="today" className="page-enter" style={{padding:"20px 20px 0"}}>
             <div style={{marginBottom:24}}>
-              <h1 style={{fontSize:28,fontWeight:800,letterSpacing:-.5}}>{isHe?"שלום 👋":"Hello 👋"}</h1>
-              <p style={{color:"var(--mu)",marginTop:2}}>{isHe?"ברוכ/ה השב/ה!":"Welcome back!"}</p>
+              <h1 style={{fontFamily:"var(--serif)",fontSize:32,fontWeight:400,letterSpacing:-.5,color:"var(--fg)"}}>{isHe?"שלום 👋":"Hello 👋"}</h1>
+              <p style={{color:"var(--mu)",marginTop:5,fontSize:13,letterSpacing:.3}}>{isHe?"ברוכ/ה השב/ה!":"Welcome back!"}</p>
             </div>
 
             {/* Stats cards */}
@@ -828,11 +931,11 @@ export default function App() {
                   <div style={{background:"var(--bg2)",borderRadius:20,padding:"16px",border:"1px solid var(--bd)"}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                       <span style={{fontSize:16}}>⚠️</span>
-                      <span style={{fontSize:11,color:"#EF4444",fontWeight:600}}>●</span>
+                      <span style={{fontSize:11,color:"var(--red)",fontWeight:600}}>●</span>
                     </div>
                     <div style={{fontSize:12,color:"var(--mu)",marginBottom:4}}>Outstanding</div>
                     <div style={{fontSize:24,fontWeight:800,letterSpacing:-.5}}>₪{totalOwed.toLocaleString()}</div>
-                    <div style={{fontSize:11,color:"#EF4444",fontWeight:600,marginTop:4}}>Overdue</div>
+                    <div style={{fontSize:11,color:"var(--red)",fontWeight:600,marginTop:4}}>Overdue</div>
                   </div>
                   <div style={{background:"var(--bg2)",borderRadius:20,padding:"16px",border:"1px solid var(--bd)"}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
@@ -851,7 +954,7 @@ export default function App() {
             <div style={{background:"var(--bg2)",borderRadius:14,padding:"12px 16px",marginBottom:24,display:"flex",alignItems:"center",gap:10,border:"1px solid var(--bd)"}}>
               <span style={{color:"var(--mu)",fontSize:16}}>🔍</span>
               <input value={memberSearch} onChange={e=>setMemberSearch(e.target.value)} placeholder="Search students..."
-                style={{flex:1,background:"transparent",border:"none",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif",fontWeight:400}}
+                style={{flex:1,background:"transparent",border:"none",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"var(--sans)",fontWeight:400}}
                 onFocus={()=>setView("members")}/>
             </div>
 
@@ -883,7 +986,7 @@ export default function App() {
                 <>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                     <div style={{fontSize:16,fontWeight:700}}>Payments</div>
-                    <button onClick={()=>setView("accounting")} style={{background:"transparent",border:"none",color:"var(--ac)",fontSize:14,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:500}}>View All ›</button>
+                    <button onClick={()=>setView("accounting")} style={{background:"transparent",border:"none",color:"var(--ac)",fontSize:14,cursor:"pointer",fontFamily:"var(--sans)",fontWeight:500}}>View All ›</button>
                   </div>
                   {unpaidStudents.map(s=>{
                     const{charged}=mSt(s.id); const pay=getPay(s.id,mk); const debt=getDebt(s.id);
@@ -898,8 +1001,8 @@ export default function App() {
                         </div>
                         <div style={{display:"flex",gap:8,alignItems:"center"}}>
                           {isOverdue
-                            ? <button style={{background:"rgba(245,158,11,0.9)",color:"#000",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}} onClick={e=>{e.stopPropagation();setMsgDraft({student:s,type:"payment"});}}>₪{charged} Overdue</button>
-                            : <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,mk,{status:"paid"});}}>Pay Now 💬</button>
+                            ? <button style={{background:"rgba(245,158,11,0.9)",color:"#000",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)"}} onClick={e=>{e.stopPropagation();setMsgDraft({student:s,type:"payment"});}}>₪{charged} Overdue</button>
+                            : <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,mk,{status:"paid"});}}>Pay Now 💬</button>
                           }
                         </div>
                       </div>
@@ -912,14 +1015,14 @@ export default function App() {
             {/* Birthdays */}
             {birthdays.length>0&&(
               <div style={{background:"linear-gradient(135deg,#1a1500,#1C1C1E)",borderRadius:16,padding:"14px 16px",marginTop:12,border:"1px solid rgba(245,158,11,0.2)"}}>
-                <div style={{fontSize:12,color:"#F59E0B",fontWeight:600,marginBottom:10}}>🎂 Upcoming Birthdays</div>
+                <div style={{fontSize:12,color:"var(--amber)",fontWeight:600,marginBottom:10}}>🎂 Upcoming Birthdays</div>
                 {birthdays.map(s=>(
                   <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(245,158,11,0.1)"}}>
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
                       <Avatar name={s.name} size={32}/>
                       <span style={{fontSize:14,fontWeight:500}}>{s.name}</span>
                     </div>
-                    <span style={{fontSize:12,color:"#F59E0B"}}>{s.daysUntil===0?"Today! 🎉":s.daysUntil===1?"Tomorrow":s.bdayLabel+" ("+s.daysUntil+"d)"}</span>
+                    <span style={{fontSize:12,color:"var(--amber)"}}>{s.daysUntil===0?"Today! 🎉":s.daysUntil===1?"Tomorrow":s.bdayLabel+" ("+s.daysUntil+"d)"}</span>
                   </div>
                 ))}
               </div>
@@ -927,7 +1030,7 @@ export default function App() {
 
             {/* Today's classes */}
             <div style={{marginTop:20}}>
-              <div style={{fontSize:16,fontWeight:700,marginBottom:12}}>{today}'s Classes</div>
+              <div style={{fontFamily:"var(--serif)",fontSize:20,fontWeight:400,marginBottom:12,letterSpacing:-.2}}>{today}'s Classes</div>
               {todayCls.length===0&&<p style={{color:"var(--mu)",fontSize:14}}>No classes scheduled today.</p>}
               {todayCls.map(c=>{
                 const enrolled=students.filter(s=>(s.assignedClasses||[]).includes(c.id)&&!s.archived);
@@ -935,12 +1038,12 @@ export default function App() {
                 return (
                   <div key={c.id} style={{background:"var(--bg2)",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid var(--bd)",cursor:"pointer"}}
                     onClick={()=>setActiveClassPanel(c.id)}>
-                    <div style={{width:44,height:44,borderRadius:12,background:"rgba(59,130,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>💃</div>
+                    <div style={{width:44,height:44,borderRadius:12,background:"rgba(196,120,60,0.12)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>💃</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:15,fontWeight:600}}>{c.name}</div>
                       <div style={{fontSize:12,color:"var(--mu)"}}>{c.time} · {present.length}/{enrolled.length} present</div>
                     </div>
-                    <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"var(--sans)"}}>
                       Mark {present.length} Present
                     </button>
                   </div>
@@ -979,7 +1082,7 @@ export default function App() {
               {/* Date nav */}
               <div style={{padding:"12px 20px",borderBottom:"1px solid var(--bd)",flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span style={{fontSize:15,fontWeight:600}}>Tuesday, {new Date().toLocaleDateString("en",{month:"short",day:"numeric"})}</span>
-                <button onClick={()=>markAll(c.id,c.name)} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                <button onClick={()=>markAll(c.id,c.name)} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)"}}>
                   Mark {enrolled.length} Present
                 </button>
               </div>
@@ -1011,7 +1114,7 @@ export default function App() {
               </div>
               {/* Save button */}
               <div style={{padding:"16px 20px 48px",borderTop:"1px solid var(--bd)",flexShrink:0}}>
-                <button onClick={saveAndClose} style={{width:"100%",padding:"16px",borderRadius:16,background:"var(--ac)",border:"none",color:"var(--fg)",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                <button onClick={saveAndClose} style={{width:"100%",padding:"16px",borderRadius:16,background:"var(--ac)",border:"none",color:"var(--fg)",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)"}}>
                   {gasUrl?"☁ Save & Close":"✓ Done"}
                 </button>
               </div>
@@ -1031,7 +1134,7 @@ export default function App() {
                   <div style={{fontSize:12,color:"var(--mu)",marginTop:2}}>{a.msg}</div>
                 </div>
                 <button onClick={()=>{const s=students.find(x=>x.id===a.studentId);setMsgDraft({student:s,type:"absent"});}}
-                  style={{background:"rgba(245,158,11,0.15)",color:"#F59E0B",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",whiteSpace:"nowrap"}}>
+                  style={{background:"rgba(245,158,11,0.15)",color:"var(--amber)",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)",whiteSpace:"nowrap"}}>
                   Message
                 </button>
               </div>
@@ -1120,12 +1223,12 @@ export default function App() {
                       <div style={{fontSize:12,color:"var(--mu)"}}>{presentCount}/{enrolled.length} present</div>
                     </div>
                     <button onClick={()=>{ const cls=classes.find(x=>x.id===c.id); if(cls)markAll(cls.id,cls.name,attDate); }}
-                      style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                      style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--sans)"}}>
                       Mark {enrolled.length} Present
                     </button>
                   </div>
                   <input value={attSearch} onChange={e=>setAttSearch(e.target.value)} placeholder="Search students..."
-                    style={{width:"100%",background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif",marginBottom:10}}/>
+                    style={{width:"100%",background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"var(--sans)",marginBottom:10}}/>
                   {enrolled.filter(s=>s.name.toLowerCase().includes(attSearch.toLowerCase())).map(s=>{
                     const on=isIn(s.id,c.id,attDate);
                     return (
@@ -1133,7 +1236,7 @@ export default function App() {
                         <Avatar name={s.name} size={36}/>
                         <div style={{flex:1}}>
                           <div style={{fontSize:14,fontWeight:500}}>{s.name}</div>
-                          {on&&<div style={{fontSize:11,color:"#10B981"}}>Present</div>}
+                          {on&&<div style={{fontSize:11,color:"var(--green)"}}>Present</div>}
                         </div>
                         <button onClick={()=>toggle(s.id,c.id,c.name,attDate)}
                           style={{width:38,height:38,borderRadius:10,border:"none",background:on?"#10B981":"var(--bg3)",color:"var(--fg)",cursor:"pointer",fontSize:16,fontWeight:700,transition:"all .15s"}}>
@@ -1155,12 +1258,12 @@ export default function App() {
               <div style={{flex:1,background:"var(--bg2)",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:8,border:"1px solid var(--bd)"}}>
                 <span style={{color:"var(--mu)"}}>🔍</span>
                 <input value={memberSearch} onChange={e=>setMemberSearch(e.target.value)} placeholder="Search students..."
-                  style={{flex:1,background:"transparent",border:"none",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif",fontWeight:400}}/>
+                  style={{flex:1,background:"transparent",border:"none",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"var(--sans)",fontWeight:400}}/>
               </div>
-              <button onClick={()=>{setForm({});setModal("addStudent");}} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:12,padding:"10px 16px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",whiteSpace:"nowrap"}}>+ Add</button>
+              <button onClick={()=>{setForm({});setModal("addStudent");}} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:12,padding:"10px 16px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"var(--sans)",whiteSpace:"nowrap"}}>+ Add</button>
             </div>
             <div style={{display:"flex",gap:8,marginBottom:12}}>
-              <button onClick={()=>setShowArch(!showArch)} style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:10,padding:"6px 14px",fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{showArch?"Hide Archived":"Show Archived"}</button>
+              <button onClick={()=>setShowArch(!showArch)} style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:10,padding:"6px 14px",fontSize:12,cursor:"pointer",fontFamily:"var(--sans)"}}>{showArch?"Hide Archived":"Show Archived"}</button>
             </div>
             {alpha(students).filter(s=>(showArch||!s.archived)&&(s.name+s.email+s.phone).toLowerCase().includes(memberSearch.toLowerCase())).map(s=>{
               const{n,charged}=mSt(s.id); const pay=getPay(s.id,monthKey()); const debt=getDebt(s.id);
@@ -1178,9 +1281,9 @@ export default function App() {
                   </div>
                   <div style={{display:"flex",gap:8,alignItems:"center"}}>
                     {isOverdue
-                      ? <button style={{background:"rgba(245,158,11,0.9)",color:"#000",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}} onClick={e=>{e.stopPropagation();setMsgDraft({student:s,type:"payment"});}}>₪{charged} Overdue</button>
+                      ? <button style={{background:"rgba(245,158,11,0.9)",color:"#000",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)"}} onClick={e=>{e.stopPropagation();setMsgDraft({student:s,type:"payment"});}}>₪{charged} Overdue</button>
                       : isUnpaid
-                        ? <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,monthKey(),{status:"paid"});}}>Pay Now 💬</button>
+                        ? <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,monthKey(),{status:"paid"});}}>Pay Now 💬</button>
                         : null
                     }
                     <span style={{color:"#3A3A3C",fontSize:18}}>›</span>
@@ -1195,8 +1298,8 @@ export default function App() {
         {view==="classes"&&(
           <div key="classes" className="page-enter" style={{padding:"12px 20px 0"}}>
             <div style={{display:"flex",gap:10,marginBottom:16}}>
-              <button onClick={()=>{setForm({});setModal("addClass");}} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:12,padding:"10px 20px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>+ Add Class</button>
-              <button onClick={()=>setShowArch(!showArch)} style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:12,padding:"10px 16px",fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{showArch?"Hide Archived":"Show Archived"}</button>
+              <button onClick={()=>{setForm({});setModal("addClass");}} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:12,padding:"10px 20px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"var(--sans)"}}>+ Add Class</button>
+              <button onClick={()=>setShowArch(!showArch)} style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:12,padding:"10px 16px",fontSize:13,cursor:"pointer",fontFamily:"var(--sans)"}}>{showArch?"Hide Archived":"Show Archived"}</button>
             </div>
             {classes.filter(c=>showArch||!c.archived).map(c=>{
               const enrolled=students.filter(s=>(s.assignedClasses||[]).includes(c.id)&&!s.archived);
@@ -1212,8 +1315,8 @@ export default function App() {
                       <div style={{fontSize:13,color:"var(--mu)"}}>{c.day} at {c.time} · ₪{c.pricePerClass||40}/class · {enrolled.length} enrolled</div>
                     </div>
                     <div style={{display:"flex",gap:6}}>
-                      <button onClick={()=>{setActive(c.id);setForm({name:c.name,day:c.day,time:c.time,pricePerClass:c.pricePerClass});setModal("editClass");}} style={{background:"var(--bg3)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Edit</button>
-                      <button onClick={()=>setCl(classes.map(x=>x.id===c.id?{...x,archived:!x.archived}:x))} style={{background:c.archived?"rgba(52,199,89,0.12)":"rgba(245,158,11,0.15)",color:c.archived?"#10B981":"#F59E0B",border:`1px solid ${c.archived?"rgba(16,185,129,0.3)":"rgba(245,158,11,0.3)"}`,borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{c.archived?"Restore":"Archive"}</button>
+                      <button onClick={()=>{setActive(c.id);setForm({name:c.name,day:c.day,time:c.time,pricePerClass:c.pricePerClass});setModal("editClass");}} style={{background:"var(--bg3)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--sans)"}}>Edit</button>
+                      <button onClick={()=>setCl(classes.map(x=>x.id===c.id?{...x,archived:!x.archived}:x))} style={{background:c.archived?"rgba(52,199,89,0.12)":"rgba(245,158,11,0.15)",color:c.archived?"#10B981":"#F59E0B",border:`1px solid ${c.archived?"rgba(16,185,129,0.3)":"rgba(245,158,11,0.3)"}`,borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"var(--sans)"}}>{c.archived?"Restore":"Archive"}</button>
                     </div>
                   </div>
                   {enrolled.length>0&&(
@@ -1229,10 +1332,10 @@ export default function App() {
                     {wl.map((w,i)=>(
                       <div key={w.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--bd)"}}>
                         <span style={{fontSize:13}}>{i+1}. {w.name}{w.phone?` · ${w.phone}`:""}</span>
-                        <button onClick={()=>removeFromWaitlist(c.id,w.id)} style={{background:"transparent",border:"none",color:"#EF4444",cursor:"pointer",fontSize:12,fontFamily:"'Inter',sans-serif"}}>Remove</button>
+                        <button onClick={()=>removeFromWaitlist(c.id,w.id)} style={{background:"transparent",border:"none",color:"var(--red)",cursor:"pointer",fontSize:12,fontFamily:"var(--sans)"}}>Remove</button>
                       </div>
                     ))}
-                    <button onClick={()=>{setActive(c.id);setForm({});setModal("addWaitlist");}} style={{background:"transparent",border:"none",color:"var(--ac)",fontSize:13,cursor:"pointer",marginTop:8,fontFamily:"'Inter',sans-serif",fontWeight:500}}>+ Add to Waitlist</button>
+                    <button onClick={()=>{setActive(c.id);setForm({});setModal("addWaitlist");}} style={{background:"transparent",border:"none",color:"var(--ac)",fontSize:13,cursor:"pointer",marginTop:8,fontFamily:"var(--sans)",fontWeight:500}}>+ Add to Waitlist</button>
                   </div>
                 </div>
               );
@@ -1244,11 +1347,11 @@ export default function App() {
         {view==="accounting"&&(
           <div key="accounting" className="page-enter" style={{padding:"12px 20px 0"}}>
             <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-              <button onClick={()=>exportExcel(students,classes,attendance,notes)} style={{background:"var(--bg2)",color:"var(--fg)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>⬇ Export Excel</button>
-              <button onClick={()=>exportFullData(students,classes,attendance,notes,paymentsState,waitlists,reminders,followUps)} style={{background:"var(--bg2)",color:"var(--fg)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>💾 Full Backup</button>
+              <button onClick={()=>exportExcel(students,classes,attendance,notes)} style={{background:"var(--bg2)",color:"var(--fg)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"var(--sans)"}}>⬇ Export Excel</button>
+              <button onClick={()=>exportFullData(students,classes,attendance,notes,paymentsState,waitlists,reminders,followUps)} style={{background:"var(--bg2)",color:"var(--fg)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"var(--sans)"}}>💾 Full Backup</button>
               <label style={{cursor:"pointer"}}>
                 <input type="file" accept=".json" style={{display:"none"}} onChange={e=>{if(e.target.files[0])importFullData(e.target.files[0],{setStudents:setSt,setClasses:setCl,setAttendance:setAt,setNotes,setPayments:setPay,setWaitlists:setWait,setReminders,setFollowUps});}}/>
-                <span style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,fontFamily:"'Inter',sans-serif",cursor:"pointer",display:"inline-block"}}>📂 Restore</span>
+                <span style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,fontFamily:"var(--sans)",cursor:"pointer",display:"inline-block"}}>📂 Restore</span>
               </label>
             </div>
 
@@ -1260,7 +1363,7 @@ export default function App() {
               </div>
               {!revCollapsed.yoy&&(
                 <div style={{marginTop:12}}>
-                  <select value={yoyMonth} onChange={e=>setYoyMonth(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"8px 12px",color:"var(--fg)",fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif",marginBottom:12,width:"100%"}}>
+                  <select value={yoyMonth} onChange={e=>setYoyMonth(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"8px 12px",color:"var(--fg)",fontSize:13,outline:"none",fontFamily:"var(--sans)",marginBottom:12,width:"100%"}}>
                     {Array.from({length:12},(_,i)=>{ const d=new Date(); d.setMonth(d.getMonth()-i); const mk=monthKey(d); return <option key={mk} value={mk}>{mthLabel(mk)}</option>; })}
                   </select>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
@@ -1290,17 +1393,17 @@ export default function App() {
                   <div style={{fontSize:13,color:"var(--mu)",marginBottom:12,lineHeight:1.6}}>On the <strong style={{color:"var(--fg)"}}>1st of every month</strong>, the previous month is auto-exported.</div>
                   <div style={{display:"flex",gap:8}}>
                     <input value={gasUrl} onChange={e=>setGasUrl(e.target.value)} placeholder="https://script.google.com/macros/s/…/exec"
-                      style={{flex:1,background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
-                    {gasUrl&&<button onClick={()=>setGasUrl("")} style={{background:"var(--bg3)",border:"none",color:"var(--mu)",borderRadius:10,padding:"10px 14px",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13}}>Clear</button>}
+                      style={{flex:1,background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:13,outline:"none",fontFamily:"var(--sans)"}}/>
+                    {gasUrl&&<button onClick={()=>setGasUrl("")} style={{background:"var(--bg3)",border:"none",color:"var(--mu)",borderRadius:10,padding:"10px 14px",cursor:"pointer",fontFamily:"var(--sans)",fontSize:13}}>Clear</button>}
                   </div>
                   <div style={{marginTop:8,fontSize:12,color:"var(--mu)"}}>
                     {!gasUrl&&"No Drive URL — backups download locally only."}
-                    {gasUrl&&driveStatus===null&&<span><span style={{color:"#10B981",marginRight:5}}>●</span>Drive URL saved.</span>}
+                    {gasUrl&&driveStatus===null&&<span><span style={{color:"var(--green)",marginRight:5}}>●</span>Drive URL saved.</span>}
                     {driveStatus==="sending"&&<span style={{color:"var(--ac)"}}>Sending to Drive…</span>}
-                    {driveStatus==="ok"&&<span style={{color:"#10B981"}}>✓ Saved to Drive.</span>}
-                    {driveStatus==="error"&&<span style={{color:"#F59E0B"}}>⚠ Drive upload failed.</span>}
+                    {driveStatus==="ok"&&<span style={{color:"var(--green)"}}>✓ Saved to Drive.</span>}
+                    {driveStatus==="error"&&<span style={{color:"var(--amber)"}}>⚠ Drive upload failed.</span>}
                   </div>
-                  {gasUrl&&<button onClick={manualBackupToDrive} style={{marginTop:12,background:"rgba(52,199,89,0.12)",color:"#10B981",border:"1px solid rgba(16,185,129,0.3)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>☁ Save to Drive Now</button>}
+                  {gasUrl&&<button onClick={manualBackupToDrive} style={{marginTop:12,background:"rgba(52,199,89,0.12)",color:"var(--green)",border:"1px solid rgba(16,185,129,0.3)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"var(--sans)"}}>☁ Save to Drive Now</button>}
                   <div style={{marginTop:8,fontSize:12,color:"var(--mu)"}}>{autoBackupDone?<span>✓ Last run: {autoBackupDone}</span>:"Will run on the 1st of next month."}</div>
                 </div>
               )}
@@ -1330,7 +1433,7 @@ export default function App() {
                     <div style={{fontSize:14,fontWeight:700,color:"var(--ac)"}}>₪{charged}</div>
                     <div onClick={e=>e.stopPropagation()}>
                       <select value={pay.status} onChange={e=>setPy(s.id,monthKey(),{...pay,status:e.target.value})}
-                        style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:8,padding:"5px 8px",color:"var(--fg)",fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",cursor:"pointer"}}>
+                        style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:8,padding:"5px 8px",color:"var(--fg)",fontSize:12,fontFamily:"var(--sans)",outline:"none",cursor:"pointer"}}>
                         <option value="unpaid">Unpaid</option>
                         <option value="partial">Partial</option>
                         <option value="paid">Paid</option>
@@ -1349,7 +1452,7 @@ export default function App() {
             <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
               {classes.filter(c=>!c.archived).map(c=>(
                 <button key={c.id} onClick={()=>{setSessionViewCls(c.id);setSessionViewDate(null);}}
-                  style={{padding:"9px 16px",borderRadius:10,border:`1px solid ${sessionViewCls===c.id?"var(--ac)":"var(--bg3)"}`,background:sessionViewCls===c.id?"rgba(59,130,246,0.15)":"var(--bg2)",color:sessionViewCls===c.id?"var(--ac)":"#8E8E93",fontFamily:"'Inter',sans-serif",fontSize:13,cursor:"pointer",fontWeight:sessionViewCls===c.id?600:400}}>{c.name}</button>
+                  style={{padding:"9px 16px",borderRadius:10,border:`1px solid ${sessionViewCls===c.id?"var(--ac)":"var(--bg3)"}`,background:sessionViewCls===c.id?"rgba(59,130,246,0.15)":"var(--bg2)",color:sessionViewCls===c.id?"var(--ac)":"#8E8E93",fontFamily:"var(--sans)",fontSize:13,cursor:"pointer",fontWeight:sessionViewCls===c.id?600:400}}>{c.name}</button>
               ))}
             </div>
             {!sessionViewCls&&<div style={{background:"var(--bg2)",borderRadius:16,padding:20,textAlign:"center",color:"var(--mu)"}}>Select a class to view its session history.</div>}
@@ -1392,20 +1495,19 @@ export default function App() {
         )}
 
         {/* ── BOTTOM NAV ── */}
-        <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"var(--nav-bg)",backdropFilter:"blur(20px)",borderTop:"1px solid var(--bd)",padding:"8px 0 28px",zIndex:200}}>
-          <div style={{display:"flex",justifyContent:"space-around"}}>
-            {navItems.map(({v,icon,label})=>{
-              const active=view===v;
-              return (
-                <button key={v} onClick={()=>setView(v)} className="btn-tap"
-                  style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"transparent",border:"none",cursor:"pointer",padding:"6px 20px",position:"relative"}}>
-                  <span style={{fontSize:22,filter:active?"none":"grayscale(1)",opacity:active?1:.5,transition:"all .2s"}}>{icon}</span>
-                  <span style={{fontSize:10,fontWeight:600,color:active?"var(--ac)":"#8E8E93",fontFamily:"'Inter',sans-serif",transition:"color .2s"}}>{label}</span>
-                  {active&&<div style={{position:"absolute",bottom:-2,left:"50%",transform:"translateX(-50%)",width:4,height:4,borderRadius:"50%",background:"var(--ac)"}}/>}
-                </button>
-              );
-            })}
-          </div>
+        <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"var(--nav-bg)",backdropFilter:"blur(28px) saturate(180%)",borderTop:"1px solid var(--bd)",padding:"10px 8px 28px",zIndex:200,display:"flex",justifyContent:"space-around",gap:2}}>
+          {navItems.map(({v,icon,label})=>{
+            const active=view===v;
+            return (
+              <button key={v} onClick={()=>setView(v)}
+                style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2,border:"none",cursor:"pointer",padding:"7px 4px",position:"relative",borderRadius:12,transition:"all .2s",
+                  background:active?"rgba(196,120,60,0.1)":"transparent"}}>
+                {active&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:24,height:2.5,borderRadius:2,background:"var(--ac)"}}/>}
+                <span style={{fontSize:19,transition:"all .2s",filter:active?"none":"grayscale(1) opacity(.4)",transform:active?"scale(1.12)":"scale(1)"}}>{icon}</span>
+                <span style={{fontSize:9,fontWeight:700,letterSpacing:.8,textTransform:"uppercase",color:active?"var(--ac)":"var(--mu)",fontFamily:"var(--sans)",transition:"color .2s"}}>{label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* ── MODALS ── */}
@@ -1442,7 +1544,7 @@ export default function App() {
               <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20}}>
                 <Avatar name={student.name} size={64}/>
                 <div>
-                  <div style={{fontSize:20,fontWeight:800}}>{student.name}</div>
+                  <div style={{fontFamily:"var(--serif)",fontSize:24,fontWeight:400,letterSpacing:-.3}}>{student.name}</div>
                   <div style={{fontSize:13,color:"var(--mu)",marginTop:2}}>Member since {student.joinDate?new Date(student.joinDate).toLocaleString("en",{month:"short",year:"numeric"}):"—"}</div>
                 </div>
                 <div style={{marginLeft:"auto",display:"flex",gap:8}}>
@@ -1452,9 +1554,9 @@ export default function App() {
               </div>
 
               {/* Quick actions */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-                <button onClick={()=>setMsgDraft({student,type:"absent"})} style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:14,padding:"14px",color:"var(--fg)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>✅ Message</button>
-                <button onClick={()=>window.open(`tel:${student.phone}`)} style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:14,padding:"14px",color:"var(--fg)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>🔑 Call</button>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:22}}>
+                <button onClick={()=>setMsgDraft({student,type:"absent"})} style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:14,padding:"14px",color:"var(--fg)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"var(--sans)"}}>✅ Message</button>
+                <button onClick={()=>window.open(`tel:${student.phone}`)} style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:14,padding:"14px",color:"var(--fg)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"var(--sans)"}}>🔑 Call</button>
               </div>
 
               {/* Payment Status */}
@@ -1465,17 +1567,17 @@ export default function App() {
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:16}}>
                   <div>
-                    <div style={{fontSize:28,fontWeight:800,color:"var(--ac)"}}>₪{charged}</div>
+                    <div style={{fontFamily:"var(--serif)",fontSize:32,fontWeight:400,color:"var(--ac)",lineHeight:1}}>₪{charged}</div>
                     <div style={{fontSize:13,color:"var(--mu)",marginTop:2}}>Due · {n} class{n!==1?"es":""}</div>
-                    {debt>0&&<div style={{fontSize:12,color:"#EF4444",marginTop:2}}>Overdue {Math.round(debt/MONTHLY_MINIMUM*30)} Days</div>}
+                    {debt>0&&<div style={{fontSize:12,color:"var(--red)",marginTop:2}}>Overdue {Math.round(debt/MONTHLY_MINIMUM*30)} Days</div>}
                   </div>
                   <div style={{marginLeft:"auto",display:"flex",gap:8,flexWrap:"wrap"}}>
-                    <button onClick={()=>setPy(student.id,monthKey(),{status:"paid"})} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Record Payment</button>
+                    <button onClick={()=>setPy(student.id,monthKey(),{status:"paid"})} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)"}}>Record Payment</button>
                   </div>
                 </div>
                 <div style={{marginTop:12}}>
                   <select value={pay.status} onChange={e=>setPy(student.id,monthKey(),{...pay,status:e.target.value})}
-                    style={{background:"var(--bg2)",border:"1px solid var(--bd2)",borderRadius:8,padding:"7px 12px",color:"var(--fg)",fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none",cursor:"pointer"}}>
+                    style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"8px 12px",color:"var(--fg)",fontSize:13,fontFamily:"var(--sans)",outline:"none",cursor:"pointer"}}>
                     <option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option>
                   </select>
                 </div>
@@ -1504,13 +1606,13 @@ export default function App() {
                         <div style={{fontSize:10,color:"var(--mu)",textTransform:"uppercase"}}>{new Date(a.date).toLocaleString("en",{month:"short"})}</div>
                       </div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:500,color:"#10B981"}}>{a.className}</div>
+                        <div style={{fontSize:13,fontWeight:500,color:"var(--green)"}}>{a.className}</div>
                         <div style={{fontSize:11,color:"var(--mu)"}}>Present</div>
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <div style={{width:40,height:4,borderRadius:2,background:"var(--bd2)",overflow:"hidden"}}><div style={{width:`${pct}%`,height:"100%",background:"#10B981",borderRadius:2}}/></div>
-                        <span style={{fontSize:10,color:"#10B981",fontWeight:600}}>{pct}</span>
-                        <span style={{width:8,height:8,borderRadius:"50%",background:"#10B981",display:"inline-block"}}/>
+                        <div style={{width:40,height:4,borderRadius:2,background:"var(--bd2)",overflow:"hidden"}}><div style={{width:`${pct}%`,height:"100%",background:"var(--green)",borderRadius:2}}/></div>
+                        <span style={{fontSize:10,color:"var(--green)",fontWeight:600}}>{pct}</span>
+                        <span style={{width:8,height:8,borderRadius:"50%",background:"var(--green)",display:"inline-block"}}/>
                       </div>
                     </div>
                   );
@@ -1522,7 +1624,7 @@ export default function App() {
               <div style={{display:"flex",gap:2,marginBottom:16,background:"var(--bg3)",borderRadius:12,padding:4}}>
                 {[["history","Class History"],["notes","Notes ("+stNotes.length+")"],["followup","Follow-ups"]].map(([t,l])=>(
                   <button key={t} onClick={()=>setProfTab(t)}
-                    style={{flex:1,padding:"8px 12px",borderRadius:9,border:"none",background:profTab===t?"var(--bg2)":"transparent",color:profTab===t?"#fff":"#8E8E93",fontFamily:"'Inter',sans-serif",fontSize:12,cursor:"pointer",fontWeight:profTab===t?600:400,transition:"all .15s"}}>{l}</button>
+                    style={{flex:1,padding:"8px 12px",borderRadius:9,border:"none",background:profTab===t?"var(--ac)":"transparent",color:profTab===t?"#fff":"var(--mu)",fontFamily:"var(--sans)",fontSize:12,cursor:"pointer",fontWeight:profTab===t?600:400,transition:"all .15s"}}>{l}</button>
                 ))}
               </div>
 
@@ -1534,7 +1636,7 @@ export default function App() {
                     {attHist.map((a,i)=>(
                       <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--bd)",fontSize:13}}>
                         <span style={{color:"var(--mu)"}}>{fmtDate(a.date)}</span>
-                        <span style={{color:"#10B981"}}>{a.className}</span>
+                        <span style={{color:"var(--green)"}}>{a.className}</span>
                       </div>
                     ))}
                   </div>
@@ -1545,7 +1647,7 @@ export default function App() {
                 <div>
                   <div style={{display:"flex",gap:8,marginBottom:12}}>
                     <input value={noteInput} onChange={e=>setNoteInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&noteInput.trim()){addNote(student.id,noteInput);setNoteInput("");}}} placeholder="Add a note… (Enter to save)"
-                      style={{flex:1,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                      style={{flex:1,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"var(--sans)"}}/>
                     <Btn onClick={()=>{addNote(student.id,noteInput);setNoteInput("");}}>Add</Btn>
                   </div>
                   <div style={{maxHeight:220,overflowY:"auto"}}>
@@ -1554,7 +1656,7 @@ export default function App() {
                       <div key={n.id} style={{padding:"10px 0",borderBottom:"1px solid var(--bd)"}}>
                         <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                           <span style={{fontSize:11,color:"var(--mu)"}}>{fmtTs(n.ts)}</span>
-                          <button onClick={()=>deleteNote(student.id,n.id)} style={{background:"none",border:"none",color:"#EF4444",cursor:"pointer",fontSize:13}}>🗑</button>
+                          <button onClick={()=>deleteNote(student.id,n.id)} style={{background:"none",border:"none",color:"var(--red)",cursor:"pointer",fontSize:13}}>🗑</button>
                         </div>
                         <div style={{fontSize:14,lineHeight:1.5}}>{n.text}</div>
                       </div>
@@ -1569,7 +1671,7 @@ export default function App() {
                   <div>
                     <div style={{display:"flex",gap:8,marginBottom:12}}>
                       <input value={fupInput} onChange={e=>setFupInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&fupInput.trim()){addFollowUp(student.id,fupInput);setFupInput("");}}} placeholder="Log a follow-up… (Enter to save)"
-                        style={{flex:1,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                        style={{flex:1,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"var(--sans)"}}/>
                       <Btn onClick={()=>{addFollowUp(student.id,fupInput);setFupInput("");}}>Add</Btn>
                     </div>
                     <div style={{maxHeight:200,overflowY:"auto"}}>
@@ -1594,7 +1696,7 @@ export default function App() {
             <Inp label="Class Name" value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})}/>
             <div style={{marginBottom:14}}>
               <label style={{display:"block",fontSize:11,color:"var(--mu)",marginBottom:6,fontWeight:500}}>Day</label>
-              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}>
+              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"var(--sans)"}}>
                 {DAYS.slice(0,6).map(d=><option key={d}>{d}</option>)}
               </select>
             </div>
@@ -1612,7 +1714,7 @@ export default function App() {
             <Inp label="Class Name" value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})}/>
             <div style={{marginBottom:14}}>
               <label style={{display:"block",fontSize:11,color:"var(--mu)",marginBottom:6,fontWeight:500}}>Day</label>
-              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}>
+              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"var(--sans)"}}>
                 {DAYS.slice(0,6).map(d=><option key={d}>{d}</option>)}
               </select>
             </div>
@@ -1644,7 +1746,7 @@ export default function App() {
             <Modal title="Message Draft" onClose={()=>{setMsgDraft(null);setMsgTxt("");}}>
               <div style={{fontSize:13,color:"var(--mu)",marginBottom:12}}>For: <strong style={{color:"var(--fg)"}}>{s.name}</strong></div>
               <textarea value={txt} onChange={e=>setMsgTxt(e.target.value)}
-                style={{width:"100%",minHeight:140,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:14,fontFamily:"'Inter',sans-serif",resize:"vertical",outline:"none",marginBottom:14}}/>
+                style={{width:"100%",minHeight:140,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:14,fontFamily:"var(--sans)",resize:"vertical",outline:"none",marginBottom:14}}/>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {s.phone&&<Btn variant="green" onClick={()=>window.open(`https://wa.me/${s.phone.replace(/[^0-9]/g,"")}?text=${encodeURIComponent(txt)}`)}>📱 WhatsApp</Btn>}
                 {s.email&&<Btn variant="ghost" onClick={()=>window.open(`mailto:${s.email}?body=${encodeURIComponent(txt)}`)}>✉ Email</Btn>}
@@ -1657,9 +1759,9 @@ export default function App() {
         {/* SIDE MENU */}
         {menuOpen&&(
           <div onClick={()=>setMenuOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",zIndex:400,backdropFilter:"blur(8px)",animation:"fadeIn .2s ease"}}>
-            <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,right:0,width:"80%",maxWidth:320,height:"100%",background:"var(--bg2)",borderLeft:"1px solid var(--bd)",display:"flex",flexDirection:"column",animation:"slideIn .3s cubic-bezier(.4,0,.2,1)"}}>
+            <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,right:0,width:"80%",maxWidth:320,height:"100%",background:"var(--bg2)",borderLeft:"1px solid var(--bd2)",display:"flex",flexDirection:"column",animation:"slideIn .3s cubic-bezier(.4,0,.2,1)",boxShadow:"-20px 0 60px rgba(0,0,0,.4)"}}>
               <div style={{padding:"52px 20px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid var(--bd)"}}>
-                <span style={{fontSize:18,fontWeight:700}}>Menu</span>
+                <span style={{fontFamily:"var(--serif)",fontSize:22,fontWeight:400,letterSpacing:-.2}}>Menu</span>
                 <button onClick={()=>setMenuOpen(false)} style={{width:32,height:32,borderRadius:8,border:"1px solid var(--bd2)",background:"var(--bg3)",color:"var(--fg)",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
               </div>
               <div style={{flex:1,overflowY:"auto",paddingBottom:16}}>
@@ -1684,13 +1786,13 @@ export default function App() {
                       const act=view===v;
                       return (
                         <div key={v} onClick={()=>{setView(v);setMenuOpen(false);}}
-                          style={{display:"flex",alignItems:"center",gap:12,padding:"12px 20px",cursor:"pointer",background:act?"rgba(59,130,246,0.1)":"transparent",borderLeft:`3px solid ${act?"var(--ac)":"transparent"}`,transition:"all .15s"}}>
-                          <div style={{width:36,height:36,borderRadius:10,background:act?"rgba(59,130,246,0.2)":"var(--bg3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{icon}</div>
+                          style={{display:"flex",alignItems:"center",gap:12,padding:"12px 20px",cursor:"pointer",background:act?"rgba(196,120,60,0.1)":"transparent",borderLeft:`3px solid ${act?"var(--ac)":"transparent"}`,transition:"all .15s"}}>
+                          <div style={{width:36,height:36,borderRadius:10,background:act?"rgba(196,120,60,0.15)":"var(--bg3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{icon}</div>
                           <div style={{flex:1}}>
                             <div style={{fontSize:14,fontWeight:500,color:"var(--fg)"}}>{lbl}</div>
                             <div style={{fontSize:11,color:"var(--mu)"}}>{sub}</div>
                           </div>
-                          {badge&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:10,background:"rgba(239,68,68,0.15)",color:"#EF4444",border:"1px solid rgba(239,68,68,0.3)"}}>{badge}</span>}
+                          {badge&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:10,background:"rgba(239,68,68,0.15)",color:"var(--red)",border:"1px solid rgba(239,68,68,0.3)"}}>{badge}</span>}
                         </div>
                       );
                     })}
@@ -1710,7 +1812,7 @@ export default function App() {
                 <div style={{display:"flex",background:"var(--bg3)",borderRadius:10,padding:2,border:"1px solid var(--bd2)"}}>
                   {["he","en"].map(l=>(
                     <button key={l} onClick={()=>setLangAndStore(l)}
-                      style={{padding:"5px 12px",borderRadius:8,border:"none",background:lang===l?"var(--ac)":"transparent",color:lang===l?"#fff":"var(--mu)",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s"}}>
+                      style={{padding:"5px 12px",borderRadius:8,border:"none",background:lang===l?"var(--ac)":"transparent",color:lang===l?"#fff":"var(--mu)",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"var(--sans)",transition:"all .2s"}}>
                       {l==="he"?"עברית":"English"}
                     </button>
                   ))}
