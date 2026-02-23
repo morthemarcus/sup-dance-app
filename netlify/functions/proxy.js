@@ -153,7 +153,7 @@ function buildXlsx(data) {
 }
 
 // ─── הפעולות החדשות — מעבירות ישירות ל-Google Apps Script ───────────────────
-const STUDENT_ACTIONS = ['getStudioData','studentLogin','registerClass','unregisterClass','updateStudentProfile','logPayment'];
+const STUDENT_ACTIONS = ['getStudioData','studentLogin','registerClass','unregisterClass','updateStudentProfile','logPayment','rsvp'];
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
