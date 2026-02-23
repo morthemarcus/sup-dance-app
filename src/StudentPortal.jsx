@@ -52,6 +52,12 @@ const TRANSLATIONS = {
     notesFromTeacher: "Notes from Teacher",
     allNotes: "All notes",
     recentClasses: "Recent Classes",
+    // RSVP
+    rsvpComing: "✓ I'm coming",
+    rsvpNotComing: "✗ Not coming",
+    rsvpMaybe: "⏳ I'll update soon",
+    rsvpAttending: "attending",
+    rsvpStatus: "Your RSVP:",
     loadingClasses: "Loading your classes…",
     // Schedule
     classSchedule: "Class Schedule",
@@ -161,6 +167,12 @@ const TRANSLATIONS = {
     notesFromTeacher: "הערות מהמורה",
     allNotes: "כל ההערות",
     recentClasses: "שיעורים אחרונים",
+    // RSVP
+    rsvpComing: "✓ מגיעה",
+    rsvpNotComing: "✗ לא מגיעה",
+    rsvpMaybe: "⏳ אעדכן בקרוב",
+    rsvpAttending: "מגיעים",
+    rsvpStatus: "הסטטוס שלך:",
     loadingClasses: "טוענת את השיעורים שלך…",
     // Schedule
     classSchedule: "מערכת שיעורים",
@@ -262,6 +274,9 @@ const GAS = {
   async logPayment(studentId, amount, description, stripePaymentId) {
     return this.call("logPayment", { studentId, amount, description, stripePaymentId });
   },
+  async rsvp(studentId, classId, date, status) {
+    return this.call("rsvp", { studentId, classId, date, status });
+  },
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -310,6 +325,16 @@ const nextOccurrence = (dayName, t) => {
   const next = new Date(today);
   next.setDate(today.getDate() + diff);
   return t.nextDate(next);
+};
+
+// מחזיר תאריך YYYY-MM-DD של השיעור הבא
+const nextOccurrenceDate = (dayName) => {
+  const dayIdx = DAYS_EN.indexOf(dayName);
+  const today = new Date();
+  const diff = (dayIdx - today.getDay() + 7) % 7 || 7;
+  const next = new Date(today);
+  next.setDate(today.getDate() + diff);
+  return next.toISOString().slice(0, 10);
 };
 
 const calcMonthCost = (attendance, classes, mk) => {
@@ -371,7 +396,6 @@ function LangToggle({ compact = false }) {
 // ATOMS
 // ─────────────────────────────────────────────────────────────────────────────
 function Avatar({ name, size = 44 }) {
-  // Works for both Hebrew and English names
   const parts = name.trim().split(" ");
   const initials = parts.length >= 2
     ? parts[0][0] + parts[parts.length - 1][0]
@@ -480,8 +504,6 @@ function Section({ title, action, children }) {
 
 function PayBadge({ status }) {
   const { t } = useLang();
-  const labels = { paid: "✓ " + t.paid, partial: "~ חלקי", unpaid: t.billingDesc ? "לא שולם" : "Unpaid" };
-  // Use simple labels
   if (status === "paid") return <Chip color={Tk.green}>✓ {t.paid}</Chip>;
   if (status === "partial") return <Chip color={Tk.gold}>~ Partial</Chip>;
   return <Chip color={Tk.danger}>{t.lang === "he" ? "לא שולם" : "Unpaid"}</Chip>;
@@ -540,20 +562,16 @@ function AuthScreen({ onLogin }) {
       minHeight: "100vh", background: Tk.bg, display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", padding: 24, fontFamily: FONT,
     }}>
-      {/* Language toggle top-right (or top-left in RTL) */}
       <div style={{ position: "fixed", top: 20, [t.dir === "rtl" ? "left" : "right"]: 20, zIndex: 10 }}>
         <LangToggle />
       </div>
-
       <div style={{ position: "fixed", top: -200, left: "50%", transform: "translateX(-50%)", width: 600, height: 600, borderRadius: "50%", background: `radial-gradient(${Tk.accent}18, transparent 70%)`, pointerEvents: "none" }} />
-
       <div style={{ width: "100%", maxWidth: 380, animation: "fadeUp 0.5s ease" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ width: 80, height: 80, borderRadius: 24, margin: "0 auto 20px", background: `linear-gradient(135deg, ${Tk.accent}, ${Tk.purple})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, boxShadow: `0 16px 48px ${Tk.accent}44` }}>💃</div>
           <h1 style={{ color: Tk.text, fontFamily: SERIF, fontSize: 32, fontWeight: 700, marginBottom: 6 }}>{CONFIG.STUDIO_NAME}</h1>
           <p style={{ color: Tk.textMuted, fontSize: 15 }}>{t.studentPortal}</p>
         </div>
-
         {mode === "login" && (
           <Card>
             <Input label={t.email} type="email" value={email} onChange={setEmail} placeholder={t.emailPlaceholder} />
@@ -567,7 +585,6 @@ function AuthScreen({ onLogin }) {
             </p>
           </Card>
         )}
-
         {mode === "forgot" && (
           <Card>
             <p style={{ color: Tk.textMuted, fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>{t.forgotDesc}</p>
@@ -578,7 +595,6 @@ function AuthScreen({ onLogin }) {
             <p style={{ textAlign: "center", color: Tk.textMuted, fontSize: 13, marginTop: 14, cursor: "pointer" }} onClick={() => setMode("login")}>{t.backToLogin}</p>
           </Card>
         )}
-
         {!CONFIG.GAS_URL && (
           <p style={{ textAlign: "center", color: Tk.textDim, fontSize: 11, marginTop: 24 }}>{t.demoMode}</p>
         )}
@@ -590,7 +606,7 @@ function AuthScreen({ onLogin }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // DASHBOARD
 // ─────────────────────────────────────────────────────────────────────────────
-function Dashboard({ student, classes, attendance, notes, payments, onNavigate, onSync, syncing }) {
+function Dashboard({ student, classes, attendance, notes, payments, rsvps, onNavigate, onSync, syncing, onRsvp }) {
   const { t } = useLang();
   const mk = monthKey();
   const myClasses = classes.filter((c) => student.assignedClasses?.includes(c.id) && !c.archived);
@@ -598,8 +614,6 @@ function Dashboard({ student, classes, attendance, notes, payments, onNavigate, 
   const payStatus = payments[`${student.id}-${mk}`]?.status || "unpaid";
   const latestNotes = [...notes].sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 2);
   const recentAttendance = [...attendance].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3);
-  const upcoming = myClasses.map((c) => ({ ...c, nextDate: nextOccurrence(c.day, t) }));
-  // Get first name — works for Hebrew and English
   const firstName = student.name.trim().split(" ")[0];
 
   return (
@@ -647,17 +661,56 @@ function Dashboard({ student, classes, attendance, notes, payments, onNavigate, 
       </div>
 
       <div style={{ padding: "24px 20px 0" }}>
+        {/* RSVP Section */}
         <Section title={t.upcomingClasses} action={<span style={{ color: Tk.accent, fontSize: 13, cursor: "pointer" }} onClick={() => onNavigate("schedule")}>{t.viewAll}</span>}>
-          {upcoming.length === 0 && <p style={{ color: Tk.textMuted, fontSize: 14 }}>{t.notEnrolled}</p>}
-          {upcoming.map((c) => (
-            <Card key={c.id} style={{ marginBottom: 10, display: "flex", gap: 14, alignItems: "center", padding: "14px 16px" }}>
-              <div style={{ width: 46, height: 46, borderRadius: 12, background: `linear-gradient(135deg, ${Tk.accent}33, ${Tk.purple}33)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>🎵</div>
-              <div style={{ flex: 1 }}>
-                <p style={{ color: Tk.text, fontWeight: 600, fontSize: 15, marginBottom: 2 }}>{c.name}</p>
-                <p style={{ color: Tk.textMuted, fontSize: 12 }}>{c.nextDate} · {c.time}</p>
-              </div>
-            </Card>
-          ))}
+          {myClasses.length === 0 && <p style={{ color: Tk.textMuted, fontSize: 14 }}>{t.notEnrolled}</p>}
+          {myClasses.map((c) => {
+            const nextDate = nextOccurrenceDate(c.day);
+            const rsvpKey = `${student.id}-${c.id}-${nextDate}`;
+            const myRsvp = (rsvps || {})[rsvpKey]?.status || null;
+            const comingCount = Object.entries(rsvps || {})
+              .filter(([k, v]) => k.includes(`-${c.id}-${nextDate}`) && v.status === "coming").length;
+            const statusColor = myRsvp === "coming" ? Tk.green : myRsvp === "not_coming" ? Tk.danger : Tk.gold;
+
+            return (
+              <Card key={c.id} style={{ marginBottom: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                  <div>
+                    <p style={{ color: Tk.text, fontWeight: 600, fontSize: 15, marginBottom: 3 }}>{c.name}</p>
+                    <p style={{ color: Tk.textMuted, fontSize: 12 }}>{t.days[DAYS_EN.indexOf(c.day)]} · {c.time}</p>
+                  </div>
+                  {comingCount > 0 && (
+                    <span style={{ color: Tk.green, fontSize: 12, background: Tk.greenDim, padding: "3px 10px", borderRadius: 20, border: `1px solid ${Tk.green}33` }}>
+                      {comingCount} {t.rsvpAttending}
+                    </span>
+                  )}
+                </div>
+
+                {myRsvp && (
+                  <p style={{ color: statusColor, fontSize: 12, fontWeight: 600, marginBottom: 10 }}>
+                    {t.rsvpStatus} {myRsvp === "coming" ? t.rsvpComing : myRsvp === "not_coming" ? t.rsvpNotComing : t.rsvpMaybe}
+                  </p>
+                )}
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <Btn size="sm" variant={myRsvp === "coming" ? "success" : "ghost"}
+                    onClick={() => onRsvp(c.id, nextDate, "coming")}>
+                    {t.rsvpComing}
+                  </Btn>
+                  <Btn size="sm" variant="ghost"
+                    style={myRsvp === "not_coming" ? { borderColor: Tk.danger, color: Tk.danger } : {}}
+                    onClick={() => onRsvp(c.id, nextDate, "not_coming")}>
+                    {t.rsvpNotComing}
+                  </Btn>
+                  <Btn size="sm" variant="ghost"
+                    style={myRsvp === "maybe" ? { borderColor: Tk.gold, color: Tk.gold } : {}}
+                    onClick={() => onRsvp(c.id, nextDate, "maybe")}>
+                    {t.rsvpMaybe}
+                  </Btn>
+                </div>
+              </Card>
+            );
+          })}
         </Section>
 
         {latestNotes.length > 0 && (
@@ -1007,7 +1060,6 @@ function BottomNav({ active, onChange, payAlert }) {
     { id: "payments",  icon: "💳", label: t.pay },
     { id: "profile",   icon: "👤", label: t.profile },
   ];
-  // RTL: reverse nav order for natural right-to-left feel
   const items = t.dir === "rtl" ? [...nav].reverse() : nav;
 
   return (
@@ -1057,7 +1109,6 @@ function Header({ title }) {
 // ROOT APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function StudentApp() {
-  // Language — default Hebrew, persisted in localStorage
   const [lang, setLangState] = useState(() => {
     try { return localStorage.getItem("sup_lang") || "he"; } catch { return "he"; }
   });
@@ -1101,10 +1152,10 @@ export default function StudentApp() {
   const myNotes = studioData ? studioData.notes?.[auth?.id] || [] : [];
   const classes = studioData?.classes || DEMO_CLASSES;
   const payments = studioData?.payments || DEMO_PAYMENTS;
+  const rsvps = studioData?.rsvps || {};
 
   const ctxValue = { lang, t: { ...t, lang }, setLang };
 
-  // ── Global styles (direction applied on outer wrapper) ──────────────────
   const globalStyles = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { background: ${Tk.bg}; }
@@ -1152,14 +1203,16 @@ export default function StudentApp() {
       <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
       <style>{globalStyles}</style>
 
-      {/* Outer wrapper carries the dir attribute — this makes ALL CSS text-align, flex-direction, margins flip automatically */}
       <div dir={t.dir} style={{ minHeight: "100vh", background: Tk.bg, fontFamily: FONT, maxWidth: 480, margin: "0 auto", position: "relative" }}>
-
         <div style={{ minHeight: "100vh", animation: "fadeUp 0.3s ease" }} key={`${screen}-${lang}`}>
           {screen === "dashboard" && (
             <Dashboard student={student} classes={classes} attendance={myAttendance}
-              notes={myNotes} payments={payments} onNavigate={setScreen}
-              onSync={loadData} syncing={syncing} />
+              notes={myNotes} payments={payments} rsvps={rsvps}
+              onNavigate={setScreen} onSync={loadData} syncing={syncing}
+              onRsvp={async (classId, date, status) => {
+                await GAS.rsvp(auth.id, classId, date, status);
+                await loadData();
+              }} />
           )}
           {screen === "schedule" && (
             <><Header title={screenTitles.schedule} />
