@@ -336,29 +336,81 @@ function AdminLogin({ onSuccess }) {
   const [pw, setPw] = useState("");
   const [attempts, setAttempts] = useState(0);
   const [error, setError] = useState("");
+  const [lang, setLang] = useState("he");
+  const isHe = lang === "he";
+  const t = {
+    title: isHe ? "SUP Dance" : "SUP Dance",
+    subtitle: isHe ? "כניסת מנהל/ת" : "Admin Login",
+    placeholder: isHe ? "סיסמה" : "Password",
+    loginBtn: isHe ? "כניסה" : "Sign In",
+    err3: isHe ? "יותר מדי ניסיונות שגויים. רעננ/י את הדף כדי לנסות שוב." : "Too many failed attempts. Refresh the page to try again.",
+    err: (n) => isHe ? `סיסמה שגויה. נשארו ${n} ניסיונות.` : `Wrong password. ${n} attempts remaining.`,
+  };
   const handleLogin = () => {
     if (pw === ADMIN_PASSWORD) { sessionStorage.setItem("sup_admin","1"); onSuccess(); }
     else {
       const newAttempts = attempts + 1; setAttempts(newAttempts);
-      if (newAttempts >= 3) { setError("יותר מדי ניסיונות שגויים. רעננ/י את הדף כדי לנסות שוב."); setPw(""); }
-      else { setError(`סיסמה שגויה. נשארו ${3-newAttempts} ניסיונות.`); setPw(""); }
+      if (newAttempts >= 3) { setError(t.err3); setPw(""); }
+      else { setError(t.err(3-newAttempts)); setPw(""); }
     }
   };
   return (
-    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#000",fontFamily:"'Inter',sans-serif"}}>
-      <div style={{background:"#1C1C1E",border:"1px solid #3A3A3C",borderRadius:24,padding:"48px 36px",width:340,textAlign:"center"}}>
-        <div style={{width:72,height:72,borderRadius:20,background:"linear-gradient(135deg,#3B82F6,#8B5CF6)",margin:"0 auto 20px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:32}}>💃</div>
-        <div style={{fontSize:24,fontWeight:700,color:"#fff",marginBottom:4}}>SUP Dance</div>
-        <div style={{fontSize:14,color:"#8E8E93",marginBottom:28}}>כניסת מנהל/ת</div>
-        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} onKeyDown={e=>e.key==="Enter"&&attempts<3&&handleLogin()} placeholder="סיסמה" disabled={attempts>=3}
-          style={{width:"100%",boxSizing:"border-box",background:"#2C2C2E",border:"1.5px solid #3A3A3C",borderRadius:12,padding:"14px 16px",color:"#fff",fontSize:16,outline:"none",marginBottom:12,textAlign:"right",direction:"rtl",fontFamily:"'Inter',sans-serif"}}/>
-        {error&&<div style={{color:"#EF4444",fontSize:13,marginBottom:12,lineHeight:1.5}}>{error}</div>}
-        <button onClick={handleLogin} disabled={attempts>=3||!pw}
-          style={{width:"100%",background:attempts>=3?"#3A3A3C":"#3B82F6",color:"#fff",border:"none",borderRadius:12,padding:"14px",fontSize:16,fontWeight:700,cursor:attempts>=3?"not-allowed":"pointer",fontFamily:"'Inter',sans-serif"}}>
-          כניסה
-        </button>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        *{margin:0;padding:0;box-sizing:border-box;}
+        html,body,#root{height:100%;width:100%;}
+        body{background:#000;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+        @keyframes loginIn{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:none}}
+        @keyframes logoSpin{from{transform:rotate(-8deg) scale(.8);opacity:0}to{transform:none;opacity:1}}
+        @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+        .login-shake{animation:shake .4s ease;}
+      `}</style>
+      <div style={{position:"fixed",inset:0,background:"#000",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Inter',sans-serif"}}>
+        {/* Subtle gradient orbs in background */}
+        <div style={{position:"absolute",top:"20%",left:"50%",transform:"translateX(-50%)",width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle,rgba(59,130,246,0.12) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute",bottom:"20%",right:"10%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,0.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        
+        {/* Lang toggle top right */}
+        <div style={{position:"absolute",top:20,right:20}}>
+          <div style={{display:"flex",background:"#1C1C1E",borderRadius:10,padding:3,border:"1px solid #2C2C2E"}}>
+            {["he","en"].map(l=>(
+              <button key={l} onClick={()=>setLang(l)}
+                style={{padding:"6px 12px",borderRadius:7,border:"none",background:lang===l?"#3B82F6":"transparent",color:lang===l?"#fff":"#8E8E93",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s"}}>
+                {l==="he"?"עב":"EN"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{width:"100%",maxWidth:380,padding:"0 24px",animation:"loginIn .6s cubic-bezier(.16,1,.3,1) both"}}>
+          {/* Logo */}
+          <div style={{textAlign:"center",marginBottom:40}}>
+            <div style={{width:80,height:80,borderRadius:22,background:"linear-gradient(135deg,#3B82F6,#8B5CF6)",margin:"0 auto 16px",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,boxShadow:"0 20px 60px rgba(59,130,246,0.3)",animation:"logoSpin .7s cubic-bezier(.16,1,.3,1) .1s both"}}>💃</div>
+            <div style={{fontSize:28,fontWeight:800,color:"#fff",letterSpacing:-.5,marginBottom:4}}>SUP Dance</div>
+            <div style={{fontSize:14,color:"#8E8E93"}}>{t.subtitle}</div>
+          </div>
+
+          {/* Card */}
+          <div style={{background:"#1C1C1E",border:"1px solid #2C2C2E",borderRadius:24,padding:"28px 24px"}}>
+            <input
+              key={lang}
+              type="password" value={pw}
+              onChange={e=>setError("")||setPw(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&attempts<3&&handleLogin()}
+              placeholder={t.placeholder}
+              disabled={attempts>=3}
+              dir={isHe?"rtl":"ltr"}
+              style={{width:"100%",background:"#2C2C2E",border:`1.5px solid ${error?"#EF4444":"#3A3A3C"}`,borderRadius:14,padding:"16px 18px",color:"#fff",fontSize:16,outline:"none",marginBottom:12,textAlign:isHe?"right":"left",fontFamily:"'Inter',sans-serif",transition:"border-color .2s"}}/>
+            {error&&<div className="login-shake" style={{color:"#EF4444",fontSize:13,marginBottom:12,lineHeight:1.5,textAlign:isHe?"right":"left",direction:isHe?"rtl":"ltr"}}>{error}</div>}
+            <button onClick={handleLogin} disabled={attempts>=3||!pw}
+              style={{width:"100%",background:attempts>=3?"#3A3A3C":"#3B82F6",color:"#fff",border:"none",borderRadius:14,padding:"16px",fontSize:16,fontWeight:700,cursor:attempts>=3?"not-allowed":"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s",boxShadow:attempts>=3||!pw?"none":"0 8px 24px rgba(59,130,246,0.3)"}}>
+              {t.loginBtn}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -559,6 +611,15 @@ export default function App() {
     return {uniqueAttendees:present.size,totalSessions,totalOwed,paid,unpaid,partial,total:activeStudents.length};
   };
 
+  const [lang, setLang] = useState(() => localStorage.getItem("sup9:lang")||"he");
+  const isHe = lang === "he";
+  const setLangAndStore = (l) => { setLang(l); try{localStorage.setItem("sup9:lang",l);}catch{} };
+
+  // Sync dark mode to html attribute
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
+
   const [sessionViewCls, setSessionViewCls] = useState(null);
   const [sessionViewDate, setSessionViewDate] = useState(null);
   const [summaryMonth, setSummaryMonth] = useState(monthKey());
@@ -592,20 +653,20 @@ export default function App() {
       <Inp label="Join Date" type="date" value={form.joinDate??s.joinDate??todayStr()} onChange={e=>setForm({...form,joinDate:e.target.value})}/>
       <Inp label="Portal Password" value={form.portalPassword??s.portalPassword??""} onChange={e=>setForm({...form,portalPassword:e.target.value})} placeholder="Student app login"/>
       <div style={{marginBottom:14}}>
-        <label style={{display:"block",fontSize:11,color:"#8E8E93",marginBottom:8,fontWeight:500}}>Classes</label>
+        <label style={{display:"block",fontSize:11,color:"var(--mu)",marginBottom:8,fontWeight:500}}>Classes</label>
         {classes.filter(c=>!c.archived).map(c=>(
           <label key={c.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,cursor:"pointer"}}>
             <input type="checkbox" checked={(form.assignedClasses??s.assignedClasses??[]).includes(c.id)}
               onChange={e=>{ const cur=form.assignedClasses??s.assignedClasses??[]; setForm({...form,assignedClasses:e.target.checked?[...cur,c.id]:cur.filter(x=>x!==c.id)}); }}
-              style={{width:18,height:18,accentColor:"#3B82F6"}}/>
-            <span style={{fontSize:15,color:"#fff"}}>{c.name} <span style={{color:"#8E8E93",fontSize:13}}>({c.day} {c.time})</span></span>
+              style={{width:18,height:18,accentColor:"var(--ac)"}}/>
+            <span style={{fontSize:15,color:"var(--fg)"}}>{c.name} <span style={{color:"var(--mu)",fontSize:13}}>({c.day} {c.time})</span></span>
           </label>
         ))}
       </div>
       <div style={{marginBottom:14}}>
-        <label style={{display:"block",fontSize:11,color:"#8E8E93",marginBottom:6,fontWeight:500}}>General Notes</label>
+        <label style={{display:"block",fontSize:11,color:"var(--mu)",marginBottom:6,fontWeight:500}}>General Notes</label>
         <textarea value={form.notes??s.notes??""} onChange={e=>setForm({...form,notes:e.target.value})}
-          style={{width:"100%",background:"#2C2C2E",border:"1.5px solid #3A3A3C",borderRadius:10,padding:"12px 14px",color:"#fff",fontSize:15,outline:"none",boxSizing:"border-box",fontFamily:"'Inter',sans-serif",minHeight:80,resize:"vertical"}}/>
+          style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",boxSizing:"border-box",fontFamily:"'Inter',sans-serif",minHeight:80,resize:"vertical"}}/>
       </div>
     </>
   );
@@ -614,11 +675,17 @@ export default function App() {
   if (!adminOk) return <AdminLogin onSuccess={() => setAdminOk(true)} />;
 
   // Bottom nav items
+  const navLabels = {
+    today:    {he:"בית",    en:"Home"},
+    members:  {he:"תלמידים", en:"Students"},
+    attendance:{he:"נוכחות", en:"Attendance"},
+    accounting:{he:"תשלומים",en:"Payments"},
+  };
   const navItems = [
-    {v:"today",  icon:"⌂", label:"Home"},
-    {v:"members",icon:"👤",label:"Students"},
-    {v:"attendance",icon:"✓",label:"Attendance"},
-    {v:"accounting",icon:"₪",label:"Payments"},
+    {v:"today",  icon:"⌂", label:navLabels.today[lang]},
+    {v:"members",icon:"👤",label:navLabels.members[lang]},
+    {v:"attendance",icon:"✓",label:navLabels.attendance[lang]},
+    {v:"accounting",icon:"₪",label:navLabels.accounting[lang]},
   ];
 
   return (
@@ -626,37 +693,107 @@ export default function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#000; color:#fff; font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; }
+        html, body, #root { height:100%; }
+        body { background:var(--bg); color:var(--fg); font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased; transition:background .3s, color .3s; }
+        
+        /* ── DARK MODE (default) ── */
+        :root {
+          --bg: #000000;
+          --bg2: #1C1C1E;
+          --bg3: #2C2C2E;
+          --bd: #2C2C2E;
+          --bd2: #3A3A3C;
+          --fg: #FFFFFF;
+          --fg2: #E5E5EA;
+          --mu: #8E8E93;
+          --ac: #3B82F6;
+          --ac-hover: #2563EB;
+          --green: #10B981;
+          --amber: #F59E0B;
+          --red: #EF4444;
+          --card-shadow: 0 2px 20px rgba(0,0,0,.5);
+          --header-bg: rgba(0,0,0,0.92);
+          --nav-bg: rgba(0,0,0,0.95);
+        }
+        /* ── LIGHT MODE ── */
+        :root[data-theme="light"] {
+          --bg: #F2F2F7;
+          --bg2: #FFFFFF;
+          --bg3: #E5E5EA;
+          --bd: #E5E5EA;
+          --bd2: #C7C7CC;
+          --fg: #000000;
+          --fg2: #1C1C1E;
+          --mu: #6D6D72;
+          --ac: #007AFF;
+          --ac-hover: #0056CC;
+          --green: #34C759;
+          --amber: #FF9500;
+          --red: #FF3B30;
+          --card-shadow: 0 2px 12px rgba(0,0,0,.08);
+          --header-bg: rgba(242,242,247,0.92);
+          --nav-bg: rgba(242,242,247,0.95);
+        }
+
         ::-webkit-scrollbar { width:4px; }
         ::-webkit-scrollbar-track { background:transparent; }
-        ::-webkit-scrollbar-thumb { background:#3A3A3C; border-radius:2px; }
+        ::-webkit-scrollbar-thumb { background:var(--bd2); border-radius:2px; }
+        select option { background:var(--bg2); color:var(--fg); }
+
+        /* ── ANIMATIONS ── */
         @keyframes mIn { from{opacity:0;transform:scale(.97) translateY(10px)} to{opacity:1;transform:none} }
         @keyframes fadeIn { from{opacity:0} to{opacity:1} }
         @keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
         @keyframes slideUp { from{transform:translateY(100%);opacity:0} to{transform:none;opacity:1} }
-        select option { background:#1C1C1E; color:#fff; }
+        @keyframes pageSlideLeft { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:none} }
+        @keyframes pageSlideRight { from{opacity:0;transform:translateX(-28px)} to{opacity:1;transform:none} }
+        @keyframes pageFade { from{opacity:0;transform:translateY(12px) scale(.99)} to{opacity:1;transform:none} }
+        @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+        @keyframes shimmer { from{background-position:-200% 0} to{background-position:200% 0} }
+
+        .page-enter { animation: pageFade .35s cubic-bezier(.16,1,.3,1) both; }
+        .card-item { animation: cardIn .4s cubic-bezier(.16,1,.3,1) both; }
+        .card-item:nth-child(1) { animation-delay: 0ms }
+        .card-item:nth-child(2) { animation-delay: 40ms }
+        .card-item:nth-child(3) { animation-delay: 80ms }
+        .card-item:nth-child(4) { animation-delay: 120ms }
+        .card-item:nth-child(5) { animation-delay: 160ms }
+        .card-item:nth-child(6) { animation-delay: 200ms }
+        .card-item:nth-child(n+7) { animation-delay: 240ms }
+
+        .btn-tap:active { transform: scale(.96); }
+        .row-tap:active { opacity:.7; }
       `}</style>
 
       {/* MAIN CONTAINER */}
-      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"#000",paddingBottom:90,position:"relative"}}>
+      <div style={{maxWidth:480,margin:"0 auto",minHeight:"100vh",background:"var(--bg)",paddingBottom:90,position:"relative"}}>
 
         {/* TOP HEADER */}
-        <div style={{position:"sticky",top:0,zIndex:100,background:"rgba(0,0,0,0.92)",backdropFilter:"blur(20px)",borderBottom:"1px solid #1C1C1E",padding:"16px 20px 12px"}}>
+        <div style={{position:"sticky",top:0,zIndex:100,background:"var(--header-bg)",backdropFilter:"blur(20px)",borderBottom:"1px solid var(--bd)",padding:"16px 20px 12px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <img src={LOGO} alt="SUP" style={{width:32,height:32,objectFit:"contain"}}/>
-              <span style={{fontSize:20,fontWeight:800,letterSpacing:-.5,color:"#fff"}}>SUP</span>
-              <span style={{fontSize:12,color:"#8E8E93",marginTop:2}}>Dance Studio</span>
+              <span style={{fontSize:20,fontWeight:800,letterSpacing:-.5,color:"var(--fg)"}}>SUP</span>
+              <span style={{fontSize:12,color:"var(--mu)",marginTop:2}}>Dance Studio</span>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               {alerts.length>0&&(
                 <div style={{position:"relative",cursor:"pointer"}} onClick={()=>setView("alerts")}>
                   <span style={{fontSize:22}}>🔔</span>
-                  <span style={{position:"absolute",top:-2,right:-2,width:16,height:16,borderRadius:"50%",background:"#EF4444",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{alerts.length}</span>
+                  <span style={{position:"absolute",top:-2,right:-2,width:16,height:16,borderRadius:"50%",background:"#EF4444",color:"var(--fg)",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{alerts.length}</span>
                 </div>
               )}
-              <button onClick={()=>setMenuOpen(true)} style={{width:38,height:38,borderRadius:12,background:"#1C1C1E",border:"1px solid #2C2C2E",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
-                {[0,1,2].map(i=><div key={i} style={{width:16,height:1.5,background:"#fff",borderRadius:1}}/>)}
+              <div style={{display:"flex",background:"var(--bg2)",borderRadius:10,padding:2,border:"1px solid var(--bd)"}}>
+                {["he","en"].map(l=>(
+                  <button key={l} onClick={()=>setLangAndStore(l)}
+                    style={{padding:"5px 9px",borderRadius:7,border:"none",background:lang===l?"var(--ac)":"transparent",color:lang===l?"#fff":"var(--mu)",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s"}}>
+                    {l==="he"?"עב":"EN"}
+                  </button>
+                ))}
+              </div>
+              <button onClick={()=>setMenuOpen(true)} style={{width:38,height:38,borderRadius:12,background:"var(--bg2)",border:"1px solid var(--bd)",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+                {[0,1,2].map(i=><div key={i} style={{width:16,height:1.5,background:"var(--fg)",borderRadius:1}}/>)}
               </button>
             </div>
           </div>
@@ -666,17 +803,17 @@ export default function App() {
         {view!=="today"&&(
           <div style={{padding:"20px 20px 4px"}}>
             <h1 style={{fontSize:28,fontWeight:800,letterSpacing:-.5}}>
-              {view==="members"?"Students":view==="attendance"?"Attendance":view==="accounting"?"Payments":view==="alerts"?"Alerts":view==="classes"?"Classes":view==="sessions"?"Session History":""}
+              {view==="members"?(isHe?"תלמידים":"Students"):view==="attendance"?(isHe?"נוכחות":"Attendance"):view==="accounting"?(isHe?"תשלומים":"Payments"):view==="alerts"?(isHe?"התראות":"Alerts"):view==="classes"?(isHe?"שיעורים":"Classes"):view==="sessions"?(isHe?"היסטוריה":"Session History"):""}
             </h1>
           </div>
         )}
 
         {/* ── TODAY ── */}
         {view==="today"&&(
-          <div style={{padding:"20px 20px 0",animation:"mIn .3s ease"}}>
+          <div key="today" className="page-enter" style={{padding:"20px 20px 0"}}>
             <div style={{marginBottom:24}}>
-              <h1 style={{fontSize:28,fontWeight:800,letterSpacing:-.5}}>Hello 👋</h1>
-              <p style={{color:"#8E8E93",marginTop:2}}>Welcome back!</p>
+              <h1 style={{fontSize:28,fontWeight:800,letterSpacing:-.5}}>{isHe?"שלום 👋":"Hello 👋"}</h1>
+              <p style={{color:"var(--mu)",marginTop:2}}>{isHe?"ברוכ/ה השב/ה!":"Welcome back!"}</p>
             </div>
 
             {/* Stats cards */}
@@ -688,33 +825,33 @@ export default function App() {
               const recentTotal=activeS.filter(s=>getPay(s.id,mk).status==="paid").reduce((sum,s)=>sum+mSt(s.id).charged,0);
               return (
                 <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:24}}>
-                  <div style={{background:"#1C1C1E",borderRadius:20,padding:"16px",border:"1px solid #2C2C2E"}}>
+                  <div style={{background:"var(--bg2)",borderRadius:20,padding:"16px",border:"1px solid var(--bd)"}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                       <span style={{fontSize:16}}>⚠️</span>
                       <span style={{fontSize:11,color:"#EF4444",fontWeight:600}}>●</span>
                     </div>
-                    <div style={{fontSize:12,color:"#8E8E93",marginBottom:4}}>Outstanding</div>
+                    <div style={{fontSize:12,color:"var(--mu)",marginBottom:4}}>Outstanding</div>
                     <div style={{fontSize:24,fontWeight:800,letterSpacing:-.5}}>₪{totalOwed.toLocaleString()}</div>
                     <div style={{fontSize:11,color:"#EF4444",fontWeight:600,marginTop:4}}>Overdue</div>
                   </div>
-                  <div style={{background:"#1C1C1E",borderRadius:20,padding:"16px",border:"1px solid #2C2C2E"}}>
+                  <div style={{background:"var(--bg2)",borderRadius:20,padding:"16px",border:"1px solid var(--bd)"}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                       <span style={{fontSize:16}}>✅</span>
-                      <span style={{fontSize:11,color:"#3B82F6",fontWeight:600}}>+</span>
+                      <span style={{fontSize:11,color:"var(--ac)",fontWeight:600}}>+</span>
                     </div>
-                    <div style={{fontSize:12,color:"#8E8E93",marginBottom:4}}>Recent Payments</div>
+                    <div style={{fontSize:12,color:"var(--mu)",marginBottom:4}}>Recent Payments</div>
                     <div style={{fontSize:24,fontWeight:800,letterSpacing:-.5}}>₪{recentTotal.toLocaleString()}</div>
-                    <div style={{fontSize:11,color:"#8E8E93",marginTop:4}}>This Month</div>
+                    <div style={{fontSize:11,color:"var(--mu)",marginTop:4}}>This Month</div>
                   </div>
                 </div>
               );
             })()}
 
             {/* Search bar */}
-            <div style={{background:"#1C1C1E",borderRadius:14,padding:"12px 16px",marginBottom:24,display:"flex",alignItems:"center",gap:10,border:"1px solid #2C2C2E"}}>
-              <span style={{color:"#8E8E93",fontSize:16}}>🔍</span>
+            <div style={{background:"var(--bg2)",borderRadius:14,padding:"12px 16px",marginBottom:24,display:"flex",alignItems:"center",gap:10,border:"1px solid var(--bd)"}}>
+              <span style={{color:"var(--mu)",fontSize:16}}>🔍</span>
               <input value={memberSearch} onChange={e=>setMemberSearch(e.target.value)} placeholder="Search students..."
-                style={{flex:1,background:"transparent",border:"none",color:"#fff",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}
+                style={{flex:1,background:"transparent",border:"none",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif",fontWeight:400}}
                 onFocus={()=>setView("members")}/>
             </div>
 
@@ -725,14 +862,14 @@ export default function App() {
               const present=unique.filter(s=>todayCls.some(c=>isIn(s.id,c.id)));
               const missing=unique.filter(s=>!todayCls.some(c=>isIn(s.id,c.id)));
               return unique.length>0&&(
-                <div style={{background:"#1C1C1E",borderRadius:20,padding:"16px",marginBottom:20,border:"1px solid #2C2C2E"}}>
-                  <div style={{fontSize:12,color:"#8E8E93",fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>Arriving Today</div>
+                <div style={{background:"var(--bg2)",borderRadius:20,padding:"16px",marginBottom:20,border:"1px solid var(--bd)"}}>
+                  <div style={{fontSize:12,color:"var(--mu)",fontWeight:600,marginBottom:12,textTransform:"uppercase",letterSpacing:.5}}>Arriving Today</div>
                   <div style={{display:"flex",alignItems:"center",gap:16}}>
-                    <div style={{fontSize:28,fontWeight:800}}>{unique.length} <span style={{fontSize:14,color:"#8E8E93",fontWeight:400}}>Total</span></div>
-                    <div style={{width:1,height:40,background:"#2C2C2E"}}/>
-                    <div style={{fontSize:18,fontWeight:700,color:"#3B82F6"}}>{present.length} <span style={{fontSize:12,fontWeight:400,color:"#3B82F6"}}>Present</span></div>
-                    <div style={{width:1,height:40,background:"#2C2C2E"}}/>
-                    <div style={{fontSize:18,fontWeight:700,color:"#8E8E93"}}>{missing.length} <span style={{fontSize:12,fontWeight:400,color:"#8E8E93"}}>Missing</span></div>
+                    <div style={{fontSize:28,fontWeight:800}}>{unique.length} <span style={{fontSize:14,color:"var(--mu)",fontWeight:400}}>Total</span></div>
+                    <div style={{width:1,height:40,background:"var(--bg3)"}}/>
+                    <div style={{fontSize:18,fontWeight:700,color:"var(--ac)"}}>{present.length} <span style={{fontSize:12,fontWeight:400,color:"var(--ac)"}}>Present</span></div>
+                    <div style={{width:1,height:40,background:"var(--bg3)"}}/>
+                    <div style={{fontSize:18,fontWeight:700,color:"var(--mu)"}}>{missing.length} <span style={{fontSize:12,fontWeight:400,color:"var(--mu)"}}>Missing</span></div>
                   </div>
                 </div>
               );
@@ -746,23 +883,23 @@ export default function App() {
                 <>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                     <div style={{fontSize:16,fontWeight:700}}>Payments</div>
-                    <button onClick={()=>setView("accounting")} style={{background:"transparent",border:"none",color:"#3B82F6",fontSize:14,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:500}}>View All ›</button>
+                    <button onClick={()=>setView("accounting")} style={{background:"transparent",border:"none",color:"var(--ac)",fontSize:14,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:500}}>View All ›</button>
                   </div>
                   {unpaidStudents.map(s=>{
                     const{charged}=mSt(s.id); const pay=getPay(s.id,mk); const debt=getDebt(s.id);
                     const isOverdue=pay.status==="partial";
                     return (
-                      <div key={s.id} style={{background:"#1C1C1E",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid #2C2C2E"}}
+                      <div key={s.id} className="card-item" style={{background:"var(--bg2)",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid var(--bd)"}}
                         onClick={()=>{setActive(s.id);setProfTab("history");setModal("profile");}}>
                         <Avatar name={s.name} size={44}/>
                         <div style={{flex:1}}>
                           <div style={{fontSize:15,fontWeight:600}}>{s.name}</div>
-                          <div style={{fontSize:12,color:"#8E8E93"}}>₪{charged} {pay.status==="unpaid"?"Overdue":pay.status==="partial"?"Partial":""} {debt>0?`${Math.floor(debt/charged*30)} Days`:""}</div>
+                          <div style={{fontSize:12,color:"var(--mu)"}}>₪{charged} {pay.status==="unpaid"?"Overdue":pay.status==="partial"?"Partial":""} {debt>0?`${Math.floor(debt/charged*30)} Days`:""}</div>
                         </div>
                         <div style={{display:"flex",gap:8,alignItems:"center"}}>
                           {isOverdue
                             ? <button style={{background:"rgba(245,158,11,0.9)",color:"#000",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}} onClick={e=>{e.stopPropagation();setMsgDraft({student:s,type:"payment"});}}>₪{charged} Overdue</button>
-                            : <button style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,mk,{status:"paid"});}}>Pay Now 💬</button>
+                            : <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,mk,{status:"paid"});}}>Pay Now 💬</button>
                           }
                         </div>
                       </div>
@@ -791,19 +928,19 @@ export default function App() {
             {/* Today's classes */}
             <div style={{marginTop:20}}>
               <div style={{fontSize:16,fontWeight:700,marginBottom:12}}>{today}'s Classes</div>
-              {todayCls.length===0&&<p style={{color:"#8E8E93",fontSize:14}}>No classes scheduled today.</p>}
+              {todayCls.length===0&&<p style={{color:"var(--mu)",fontSize:14}}>No classes scheduled today.</p>}
               {todayCls.map(c=>{
                 const enrolled=students.filter(s=>(s.assignedClasses||[]).includes(c.id)&&!s.archived);
                 const present=enrolled.filter(s=>isIn(s.id,c.id));
                 return (
-                  <div key={c.id} style={{background:"#1C1C1E",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid #2C2C2E",cursor:"pointer"}}
+                  <div key={c.id} style={{background:"var(--bg2)",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid var(--bd)",cursor:"pointer"}}
                     onClick={()=>setActiveClassPanel(c.id)}>
                     <div style={{width:44,height:44,borderRadius:12,background:"rgba(59,130,246,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>💃</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:15,fontWeight:600}}>{c.name}</div>
-                      <div style={{fontSize:12,color:"#8E8E93"}}>{c.time} · {present.length}/{enrolled.length} present</div>
+                      <div style={{fontSize:12,color:"var(--mu)"}}>{c.time} · {present.length}/{enrolled.length} present</div>
                     </div>
-                    <button style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
                       Mark {present.length} Present
                     </button>
                   </div>
@@ -829,26 +966,26 @@ export default function App() {
             setActiveClassPanel(null);
           };
           return (
-            <div style={{position:"fixed",inset:0,background:"#000",zIndex:300,display:"flex",flexDirection:"column",animation:"slideUp .3s ease"}}>
+            <div style={{position:"fixed",inset:0,background:"var(--bg)",zIndex:300,display:"flex",flexDirection:"column",animation:"slideUp .3s ease"}}>
               {/* Header */}
-              <div style={{background:"rgba(0,0,0,0.95)",backdropFilter:"blur(20px)",borderBottom:"1px solid #1C1C1E",padding:"52px 20px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
+              <div style={{background:"var(--nav-bg)",backdropFilter:"blur(20px)",borderBottom:"1px solid var(--bd)",padding:"52px 20px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
                 <div>
-                  <div style={{fontSize:12,color:"#8E8E93",fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:.5}}>Attendance</div>
+                  <div style={{fontSize:12,color:"var(--mu)",fontWeight:600,marginBottom:4,textTransform:"uppercase",letterSpacing:.5}}>Attendance</div>
                   <h2 style={{fontSize:22,fontWeight:800,letterSpacing:-.5}}>{c.name}</h2>
-                  <p style={{fontSize:13,color:"#8E8E93",marginTop:2}}>{c.time} · ₪{c.pricePerClass}/class · {present.length}/{enrolled.length} present</p>
+                  <p style={{fontSize:13,color:"var(--mu)",marginTop:2}}>{c.time} · ₪{c.pricePerClass}/class · {present.length}/{enrolled.length} present</p>
                 </div>
-                <button onClick={()=>setActiveClassPanel(null)} style={{width:36,height:36,borderRadius:10,border:"1px solid #3A3A3C",background:"#1C1C1E",color:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+                <button onClick={()=>setActiveClassPanel(null)} style={{width:36,height:36,borderRadius:10,border:"1px solid var(--bd2)",background:"var(--bg2)",color:"var(--fg)",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
               </div>
               {/* Date nav */}
-              <div style={{padding:"12px 20px",borderBottom:"1px solid #1C1C1E",flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{padding:"12px 20px",borderBottom:"1px solid var(--bd)",flexShrink:0,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                 <span style={{fontSize:15,fontWeight:600}}>Tuesday, {new Date().toLocaleDateString("en",{month:"short",day:"numeric"})}</span>
-                <button onClick={()=>markAll(c.id,c.name)} style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:10,padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                <button onClick={()=>markAll(c.id,c.name)} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 18px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
                   Mark {enrolled.length} Present
                 </button>
               </div>
               {/* Student list */}
               <div style={{flex:1,overflowY:"auto",padding:"8px 20px"}}>
-                {enrolled.length===0&&<p style={{color:"#8E8E93",padding:"24px 0",fontSize:14}}>No students enrolled.</p>}
+                {enrolled.length===0&&<p style={{color:"var(--mu)",padding:"24px 0",fontSize:14}}>No students enrolled.</p>}
                 {enrolled.map(s=>{
                   const on=isIn(s.id,c.id);
                   let startX=0;
@@ -856,15 +993,15 @@ export default function App() {
                     <div key={s.id}
                       onTouchStart={e=>{startX=e.touches[0].clientX;}}
                       onTouchEnd={e=>{const dx=e.changedTouches[0].clientX-startX;if(dx>60){if(!on)toggle(s.id,c.id,c.name);}else if(dx<-60){if(on)toggle(s.id,c.id,c.name);}}}
-                      style={{display:"flex",alignItems:"center",gap:14,padding:"14px 0",borderBottom:"1px solid #1C1C1E",transition:"all .15s"}}>
+                      style={{display:"flex",alignItems:"center",gap:14,padding:"14px 0",borderBottom:"1px solid var(--bd)",transition:"all .15s"}}>
                       <Avatar name={s.name} size={44}/>
                       <div style={{flex:1}}>
                         <div style={{fontSize:16,fontWeight:600}}>{s.name}</div>
-                        <div style={{fontSize:12,color:"#8E8E93"}}>{on?"Present":"Not marked"}</div>
+                        <div style={{fontSize:12,color:"var(--mu)"}}>{on?"Present":"Not marked"}</div>
                       </div>
                       <button onClick={()=>toggle(s.id,c.id,c.name)}
                         style={{width:44,height:44,borderRadius:12,border:"none",flexShrink:0,
-                          background:on?"#10B981":"#2C2C2E",color:"#fff",
+                          background:on?"#10B981":"var(--bg3)",color:"var(--fg)",
                           cursor:"pointer",fontSize:18,fontWeight:700,transition:"all .2s"}}>
                         {on?"✓":""}
                       </button>
@@ -873,8 +1010,8 @@ export default function App() {
                 })}
               </div>
               {/* Save button */}
-              <div style={{padding:"16px 20px 48px",borderTop:"1px solid #1C1C1E",flexShrink:0}}>
-                <button onClick={saveAndClose} style={{width:"100%",padding:"16px",borderRadius:16,background:"#3B82F6",border:"none",color:"#fff",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+              <div style={{padding:"16px 20px 48px",borderTop:"1px solid var(--bd)",flexShrink:0}}>
+                <button onClick={saveAndClose} style={{width:"100%",padding:"16px",borderRadius:16,background:"var(--ac)",border:"none",color:"var(--fg)",fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
                   {gasUrl?"☁ Save & Close":"✓ Done"}
                 </button>
               </div>
@@ -884,14 +1021,14 @@ export default function App() {
 
         {/* ── ALERTS ── */}
         {view==="alerts"&&(
-          <div style={{padding:"8px 20px 0",animation:"mIn .3s ease"}}>
-            {alerts.length===0&&<div style={{background:"#1C1C1E",borderRadius:16,padding:20,textAlign:"center",color:"#8E8E93",marginTop:12}}>No alerts — everyone's doing great! 🎉</div>}
+          <div key="alerts" className="page-enter" style={{padding:"8px 20px 0"}}>
+            {alerts.length===0&&<div style={{background:"var(--bg2)",borderRadius:16,padding:20,textAlign:"center",color:"var(--mu)",marginTop:12}}>No alerts — everyone's doing great! 🎉</div>}
             {alerts.map((a,i)=>(
-              <div key={i} style={{background:"#1C1C1E",borderRadius:16,padding:"14px 16px",marginBottom:8,borderLeft:`4px solid ${a.severity==="critical"?"#EF4444":"#F59E0B"}`,display:"flex",alignItems:"center",gap:12}}>
+              <div key={i} style={{background:"var(--bg2)",borderRadius:16,padding:"14px 16px",marginBottom:8,borderLeft:`4px solid ${a.severity==="critical"?"#EF4444":"#F59E0B"}`,display:"flex",alignItems:"center",gap:12}}>
                 <Avatar name={a.name} size={44}/>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:15,fontWeight:600}}>{a.name}</div>
-                  <div style={{fontSize:12,color:"#8E8E93",marginTop:2}}>{a.msg}</div>
+                  <div style={{fontSize:12,color:"var(--mu)",marginTop:2}}>{a.msg}</div>
                 </div>
                 <button onClick={()=>{const s=students.find(x=>x.id===a.studentId);setMsgDraft({student:s,type:"absent"});}}
                   style={{background:"rgba(245,158,11,0.15)",color:"#F59E0B",border:"1px solid rgba(245,158,11,0.3)",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",whiteSpace:"nowrap"}}>
@@ -904,47 +1041,102 @@ export default function App() {
 
         {/* ── ATTENDANCE ── */}
         {view==="attendance"&&(
-          <div style={{padding:"12px 20px 0",animation:"mIn .3s ease"}}>
-            <div style={{background:"#1C1C1E",borderRadius:16,padding:"14px 16px",marginBottom:16,display:"flex",justifyContent:"space-between",alignItems:"center",border:"1px solid #2C2C2E"}}>
-              <button style={{width:32,height:32,background:"transparent",border:"none",color:"#8E8E93",cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>{const d=new Date(attDate+"T12:00:00");d.setDate(d.getDate()-1);setAttDate(d.toISOString().slice(0,10));}}>‹</button>
-              <div style={{textAlign:"center"}}>
-                <div style={{fontSize:15,fontWeight:600}}>{DAYS[new Date(attDate+"T12:00:00").getDay()]}</div>
-                <div style={{fontSize:13,color:"#8E8E93"}}>{new Date(attDate+"T12:00:00").toLocaleDateString("en",{month:"short",day:"numeric",year:"numeric"})}</div>
-              </div>
-              <button style={{width:32,height:32,background:"transparent",border:"none",color:"#8E8E93",cursor:"pointer",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>{const d=new Date(attDate+"T12:00:00");d.setDate(d.getDate()+1);setAttDate(d.toISOString().slice(0,10));}}>›</button>
-            </div>
-            <input type="date" value={attDate} onChange={e=>setAttDate(e.target.value)} style={{display:"none"}}/>
-            {attDayCls.length===0&&<div style={{background:"#1C1C1E",borderRadius:16,padding:20,textAlign:"center",color:"#8E8E93"}}>No classes on this day.</div>}
+          <div key="att" className="page-enter" style={{padding:"12px 20px 0"}}>
+            {/* ── DATE STRIP ── */}
+            {(()=>{
+              const today = new Date(); today.setHours(12,0,0,0);
+              const sel = new Date(attDate+"T12:00:00");
+              // Build 61-day window: 30 before today → 30 after
+              const days = Array.from({length:61},(_,i)=>{
+                const d=new Date(today); d.setDate(today.getDate()-30+i); return d;
+              });
+              const isSameDay=(a,b)=>a.toDateString()===b.toDateString();
+              const fmtDay=(d)=>d.toLocaleDateString("en",{weekday:"short"}).slice(0,1);
+              const fmtNum=(d)=>d.getDate();
+              const fmtFull=(d)=>d.toLocaleDateString(isHe?"he":"en",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+              return (
+                <>
+                  {/* Selected date row with calendar tap */}
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                    <div style={{flex:1,background:"var(--bg2)",borderRadius:14,padding:"10px 14px",border:"1px solid var(--bd)",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",position:"relative"}}
+                      onClick={()=>document.getElementById("att-date-picker").showPicker?.()??document.getElementById("att-date-picker").click()}>
+                      <div>
+                        <div style={{fontSize:13,color:"var(--mu)",marginBottom:2}}>{isHe?"תאריך נבחר":"Selected date"}</div>
+                        <div style={{fontSize:16,fontWeight:700,color:"var(--fg)"}}>{fmtFull(sel)}</div>
+                      </div>
+                      <div style={{width:36,height:36,borderRadius:10,background:"var(--bg3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📅</div>
+                    </div>
+                    <button style={{width:38,height:38,borderRadius:10,background:"var(--bg2)",border:"1px solid var(--bd)",color:"var(--mu)",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}} title="Today"
+                      onClick={()=>setAttDate(todayStr())}>⌂</button>
+                  </div>
+                  <input id="att-date-picker" type="date" value={attDate} onChange={e=>setAttDate(e.target.value)} style={{position:"absolute",opacity:0,pointerEvents:"none",width:0,height:0}}/>
+
+                  {/* Scrollable day strip */}
+                  <div style={{overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch",marginBottom:16,marginLeft:-20,marginRight:-20,paddingLeft:20,paddingRight:20}}
+                    ref={el=>{
+                      if(el){
+                        // Scroll selected day into center on mount / change
+                        const selIdx=days.findIndex(d=>isSameDay(d,sel));
+                        const cellW=56;
+                        const target=selIdx*cellW - el.clientWidth/2 + cellW/2;
+                        el.scrollTo({left:Math.max(0,target),behavior:"smooth"});
+                      }
+                    }}>
+                    <div style={{display:"flex",gap:6,paddingBottom:4,width:"max-content"}}>
+                      {days.map((d,i)=>{
+                        const isToday=isSameDay(d,today);
+                        const isSel=isSameDay(d,sel);
+                        const ds=d.toISOString().slice(0,10);
+                        return (
+                          <button key={i} onClick={()=>setAttDate(ds)}
+                            style={{width:48,padding:"8px 0",borderRadius:12,border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,
+                              background:isSel?"var(--ac)":isToday?"rgba(59,130,246,0.12)":"var(--bg2)",
+                              color:isSel?"#fff":isToday?"var(--ac)":"var(--fg)",
+                              outline:isToday&&!isSel?"1.5px solid var(--ac)":"none",
+                              transition:"all .15s",flexShrink:0}}>
+                            <span style={{fontSize:10,fontWeight:600,opacity:isSel?1:.6,letterSpacing:.5}}>
+                              {fmtDay(d)}
+                            </span>
+                            <span style={{fontSize:16,fontWeight:800}}>{fmtNum(d)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+            {attDayCls.length===0&&<div style={{background:"var(--bg2)",borderRadius:16,padding:20,textAlign:"center",color:"var(--mu)"}}>No classes on this day.</div>}
             {attDayCls.map(c=>{
               const enrolled=students.filter(s=>(s.assignedClasses||[]).includes(c.id)&&!s.archived);
               const presentCount=enrolled.filter(s=>isIn(s.id,c.id,attDate)).length;
               const isSelected=attCls===c.id;
               return (
-                <div key={c.id} style={{background:"#1C1C1E",borderRadius:16,padding:"14px 16px",marginBottom:12,border:`1px solid ${isSelected?"#3B82F6":"#2C2C2E"}`}}>
+                <div key={c.id} style={{background:"var(--bg2)",borderRadius:16,padding:"14px 16px",marginBottom:12,border:`1px solid ${isSelected?"var(--ac)":"var(--bg3)"}`}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                     <div>
-                      <div style={{fontSize:12,color:"#8E8E93"}}>{c.time}</div>
+                      <div style={{fontSize:12,color:"var(--mu)"}}>{c.time}</div>
                       <div style={{fontSize:16,fontWeight:700}}>{c.name}</div>
-                      <div style={{fontSize:12,color:"#8E8E93"}}>{presentCount}/{enrolled.length} present</div>
+                      <div style={{fontSize:12,color:"var(--mu)"}}>{presentCount}/{enrolled.length} present</div>
                     </div>
                     <button onClick={()=>{ const cls=classes.find(x=>x.id===c.id); if(cls)markAll(cls.id,cls.name,attDate); }}
-                      style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                      style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
                       Mark {enrolled.length} Present
                     </button>
                   </div>
                   <input value={attSearch} onChange={e=>setAttSearch(e.target.value)} placeholder="Search students..."
-                    style={{width:"100%",background:"#2C2C2E",border:"1px solid #3A3A3C",borderRadius:10,padding:"10px 14px",color:"#fff",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif",marginBottom:10}}/>
+                    style={{width:"100%",background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif",marginBottom:10}}/>
                   {enrolled.filter(s=>s.name.toLowerCase().includes(attSearch.toLowerCase())).map(s=>{
                     const on=isIn(s.id,c.id,attDate);
                     return (
-                      <div key={s.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:"1px solid #2C2C2E"}}>
+                      <div key={s.id} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:"1px solid var(--bd)"}}>
                         <Avatar name={s.name} size={36}/>
                         <div style={{flex:1}}>
                           <div style={{fontSize:14,fontWeight:500}}>{s.name}</div>
                           {on&&<div style={{fontSize:11,color:"#10B981"}}>Present</div>}
                         </div>
                         <button onClick={()=>toggle(s.id,c.id,c.name,attDate)}
-                          style={{width:38,height:38,borderRadius:10,border:"none",background:on?"#10B981":"#2C2C2E",color:"#fff",cursor:"pointer",fontSize:16,fontWeight:700,transition:"all .15s"}}>
+                          style={{width:38,height:38,borderRadius:10,border:"none",background:on?"#10B981":"var(--bg3)",color:"var(--fg)",cursor:"pointer",fontSize:16,fontWeight:700,transition:"all .15s"}}>
                           {on?"✓":""}
                         </button>
                       </div>
@@ -958,23 +1150,23 @@ export default function App() {
 
         {/* ── MEMBERS ── */}
         {view==="members"&&(
-          <div style={{padding:"12px 20px 0",animation:"mIn .3s ease"}}>
+          <div key="members" className="page-enter" style={{padding:"12px 20px 0"}}>
             <div style={{display:"flex",gap:10,marginBottom:16}}>
-              <div style={{flex:1,background:"#1C1C1E",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:8,border:"1px solid #2C2C2E"}}>
-                <span style={{color:"#8E8E93"}}>🔍</span>
+              <div style={{flex:1,background:"var(--bg2)",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:8,border:"1px solid var(--bd)"}}>
+                <span style={{color:"var(--mu)"}}>🔍</span>
                 <input value={memberSearch} onChange={e=>setMemberSearch(e.target.value)} placeholder="Search students..."
-                  style={{flex:1,background:"transparent",border:"none",color:"#fff",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                  style={{flex:1,background:"transparent",border:"none",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif",fontWeight:400}}/>
               </div>
-              <button onClick={()=>{setForm({});setModal("addStudent");}} style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:12,padding:"10px 16px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",whiteSpace:"nowrap"}}>+ Add</button>
+              <button onClick={()=>{setForm({});setModal("addStudent");}} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:12,padding:"10px 16px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif",whiteSpace:"nowrap"}}>+ Add</button>
             </div>
             <div style={{display:"flex",gap:8,marginBottom:12}}>
-              <button onClick={()=>setShowArch(!showArch)} style={{background:"#1C1C1E",color:"#8E8E93",border:"1px solid #2C2C2E",borderRadius:10,padding:"6px 14px",fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{showArch?"Hide Archived":"Show Archived"}</button>
+              <button onClick={()=>setShowArch(!showArch)} style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:10,padding:"6px 14px",fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{showArch?"Hide Archived":"Show Archived"}</button>
             </div>
             {alpha(students).filter(s=>(showArch||!s.archived)&&(s.name+s.email+s.phone).toLowerCase().includes(memberSearch.toLowerCase())).map(s=>{
               const{n,charged}=mSt(s.id); const pay=getPay(s.id,monthKey()); const debt=getDebt(s.id);
               const isOverdue=pay.status==="partial"; const isUnpaid=pay.status==="unpaid";
               return (
-                <div key={s.id} style={{background:"#1C1C1E",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid #2C2C2E",cursor:"pointer"}}
+                <div key={s.id} className="card-item" style={{background:"var(--bg2)",borderRadius:16,padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12,border:"1px solid var(--bd)",cursor:"pointer"}}
                   onClick={()=>{setActive(s.id);setProfTab("history");setModal("profile");}}>
                   <Avatar name={s.name} size={48}/>
                   <div style={{flex:1,minWidth:0}}>
@@ -988,7 +1180,7 @@ export default function App() {
                     {isOverdue
                       ? <button style={{background:"rgba(245,158,11,0.9)",color:"#000",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}} onClick={e=>{e.stopPropagation();setMsgDraft({student:s,type:"payment"});}}>₪{charged} Overdue</button>
                       : isUnpaid
-                        ? <button style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,monthKey(),{status:"paid"});}}>Pay Now 💬</button>
+                        ? <button style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",display:"flex",alignItems:"center",gap:5}} onClick={e=>{e.stopPropagation();setPy(s.id,monthKey(),{status:"paid"});}}>Pay Now 💬</button>
                         : null
                     }
                     <span style={{color:"#3A3A3C",fontSize:18}}>›</span>
@@ -1001,46 +1193,46 @@ export default function App() {
 
         {/* ── CLASSES ── */}
         {view==="classes"&&(
-          <div style={{padding:"12px 20px 0",animation:"mIn .3s ease"}}>
+          <div key="classes" className="page-enter" style={{padding:"12px 20px 0"}}>
             <div style={{display:"flex",gap:10,marginBottom:16}}>
-              <button onClick={()=>{setForm({});setModal("addClass");}} style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:12,padding:"10px 20px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>+ Add Class</button>
-              <button onClick={()=>setShowArch(!showArch)} style={{background:"#1C1C1E",color:"#8E8E93",border:"1px solid #2C2C2E",borderRadius:12,padding:"10px 16px",fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{showArch?"Hide Archived":"Show Archived"}</button>
+              <button onClick={()=>{setForm({});setModal("addClass");}} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:12,padding:"10px 20px",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>+ Add Class</button>
+              <button onClick={()=>setShowArch(!showArch)} style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:12,padding:"10px 16px",fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{showArch?"Hide Archived":"Show Archived"}</button>
             </div>
             {classes.filter(c=>showArch||!c.archived).map(c=>{
               const enrolled=students.filter(s=>(s.assignedClasses||[]).includes(c.id)&&!s.archived);
               const wl=waitlists[c.id]||[];
               return (
-                <div key={c.id} style={{background:"#1C1C1E",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid #2C2C2E"}}>
+                <div key={c.id} style={{background:"var(--bg2)",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid var(--bd)"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
                     <div>
                       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
                         <div style={{fontSize:18,fontWeight:700}}>{c.name}</div>
                         {c.archived&&<Pill>Archived</Pill>}
                       </div>
-                      <div style={{fontSize:13,color:"#8E8E93"}}>{c.day} at {c.time} · ₪{c.pricePerClass||40}/class · {enrolled.length} enrolled</div>
+                      <div style={{fontSize:13,color:"var(--mu)"}}>{c.day} at {c.time} · ₪{c.pricePerClass||40}/class · {enrolled.length} enrolled</div>
                     </div>
                     <div style={{display:"flex",gap:6}}>
-                      <button onClick={()=>{setActive(c.id);setForm({name:c.name,day:c.day,time:c.time,pricePerClass:c.pricePerClass});setModal("editClass");}} style={{background:"#2C2C2E",color:"#fff",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Edit</button>
-                      <button onClick={()=>setCl(classes.map(x=>x.id===c.id?{...x,archived:!x.archived}:x))} style={{background:c.archived?"rgba(16,185,129,0.15)":"rgba(245,158,11,0.15)",color:c.archived?"#10B981":"#F59E0B",border:`1px solid ${c.archived?"rgba(16,185,129,0.3)":"rgba(245,158,11,0.3)"}`,borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{c.archived?"Restore":"Archive"}</button>
+                      <button onClick={()=>{setActive(c.id);setForm({name:c.name,day:c.day,time:c.time,pricePerClass:c.pricePerClass});setModal("editClass");}} style={{background:"var(--bg3)",color:"var(--fg)",border:"none",borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Edit</button>
+                      <button onClick={()=>setCl(classes.map(x=>x.id===c.id?{...x,archived:!x.archived}:x))} style={{background:c.archived?"rgba(52,199,89,0.12)":"rgba(245,158,11,0.15)",color:c.archived?"#10B981":"#F59E0B",border:`1px solid ${c.archived?"rgba(16,185,129,0.3)":"rgba(245,158,11,0.3)"}`,borderRadius:10,padding:"7px 14px",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>{c.archived?"Restore":"Archive"}</button>
                     </div>
                   </div>
                   {enrolled.length>0&&(
                     <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
                       {enrolled.map(s=>(
-                        <span key={s.id} style={{background:"#2C2C2E",border:"1px solid #3A3A3C",borderRadius:20,padding:"4px 12px",fontSize:12,cursor:"pointer"}} onClick={()=>{setActive(s.id);setProfTab("history");setModal("profile");}}>{s.name}</span>
+                        <span key={s.id} style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:20,padding:"4px 12px",fontSize:12,cursor:"pointer"}} onClick={()=>{setActive(s.id);setProfTab("history");setModal("profile");}}>{s.name}</span>
                       ))}
                     </div>
                   )}
-                  <div style={{borderTop:"1px solid #2C2C2E",paddingTop:12}}>
-                    <div style={{fontSize:11,color:"#8E8E93",fontWeight:600,marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>Waitlist ({wl.length})</div>
+                  <div style={{borderTop:"1px solid var(--bd)",paddingTop:12}}>
+                    <div style={{fontSize:11,color:"var(--mu)",fontWeight:600,marginBottom:8,textTransform:"uppercase",letterSpacing:.5}}>Waitlist ({wl.length})</div>
                     {wl.length===0&&<div style={{fontSize:13,color:"#3A3A3C"}}>No one waiting</div>}
                     {wl.map((w,i)=>(
-                      <div key={w.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid #2C2C2E"}}>
+                      <div key={w.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid var(--bd)"}}>
                         <span style={{fontSize:13}}>{i+1}. {w.name}{w.phone?` · ${w.phone}`:""}</span>
                         <button onClick={()=>removeFromWaitlist(c.id,w.id)} style={{background:"transparent",border:"none",color:"#EF4444",cursor:"pointer",fontSize:12,fontFamily:"'Inter',sans-serif"}}>Remove</button>
                       </div>
                     ))}
-                    <button onClick={()=>{setActive(c.id);setForm({});setModal("addWaitlist");}} style={{background:"transparent",border:"none",color:"#3B82F6",fontSize:13,cursor:"pointer",marginTop:8,fontFamily:"'Inter',sans-serif",fontWeight:500}}>+ Add to Waitlist</button>
+                    <button onClick={()=>{setActive(c.id);setForm({});setModal("addWaitlist");}} style={{background:"transparent",border:"none",color:"var(--ac)",fontSize:13,cursor:"pointer",marginTop:8,fontFamily:"'Inter',sans-serif",fontWeight:500}}>+ Add to Waitlist</button>
                   </div>
                 </div>
               );
@@ -1050,34 +1242,34 @@ export default function App() {
 
         {/* ── REVENUE ── */}
         {view==="accounting"&&(
-          <div style={{padding:"12px 20px 0",animation:"mIn .3s ease"}}>
+          <div key="accounting" className="page-enter" style={{padding:"12px 20px 0"}}>
             <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
-              <button onClick={()=>exportExcel(students,classes,attendance,notes)} style={{background:"#1C1C1E",color:"#fff",border:"1px solid #2C2C2E",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>⬇ Export Excel</button>
-              <button onClick={()=>exportFullData(students,classes,attendance,notes,paymentsState,waitlists,reminders,followUps)} style={{background:"#1C1C1E",color:"#fff",border:"1px solid #2C2C2E",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>💾 Full Backup</button>
+              <button onClick={()=>exportExcel(students,classes,attendance,notes)} style={{background:"var(--bg2)",color:"var(--fg)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>⬇ Export Excel</button>
+              <button onClick={()=>exportFullData(students,classes,attendance,notes,paymentsState,waitlists,reminders,followUps)} style={{background:"var(--bg2)",color:"var(--fg)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>💾 Full Backup</button>
               <label style={{cursor:"pointer"}}>
                 <input type="file" accept=".json" style={{display:"none"}} onChange={e=>{if(e.target.files[0])importFullData(e.target.files[0],{setStudents:setSt,setClasses:setCl,setAttendance:setAt,setNotes,setPayments:setPay,setWaitlists:setWait,setReminders,setFollowUps});}}/>
-                <span style={{background:"#1C1C1E",color:"#8E8E93",border:"1px solid #2C2C2E",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,fontFamily:"'Inter',sans-serif",cursor:"pointer",display:"inline-block"}}>📂 Restore</span>
+                <span style={{background:"var(--bg2)",color:"var(--mu)",border:"1px solid var(--bd)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:500,fontFamily:"'Inter',sans-serif",cursor:"pointer",display:"inline-block"}}>📂 Restore</span>
               </label>
             </div>
 
             {/* YoY */}
-            <div style={{background:"#1C1C1E",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid #2C2C2E"}}>
+            <div style={{background:"var(--bg2)",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid var(--bd)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={()=>setRevCollapsed(r=>({...r,yoy:!r.yoy}))}>
                 <div style={{fontSize:14,fontWeight:600}}>Year-over-Year</div>
-                <span style={{color:"#8E8E93"}}>{revCollapsed.yoy?"▸":"▾"}</span>
+                <span style={{color:"var(--mu)"}}>{revCollapsed.yoy?"▸":"▾"}</span>
               </div>
               {!revCollapsed.yoy&&(
                 <div style={{marginTop:12}}>
-                  <select value={yoyMonth} onChange={e=>setYoyMonth(e.target.value)} style={{background:"#2C2C2E",border:"1px solid #3A3A3C",borderRadius:10,padding:"8px 12px",color:"#fff",fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif",marginBottom:12,width:"100%"}}>
+                  <select value={yoyMonth} onChange={e=>setYoyMonth(e.target.value)} style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"8px 12px",color:"var(--fg)",fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif",marginBottom:12,width:"100%"}}>
                     {Array.from({length:12},(_,i)=>{ const d=new Date(); d.setMonth(d.getMonth()-i); const mk=monthKey(d); return <option key={mk} value={mk}>{mthLabel(mk)}</option>; })}
                   </select>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                     {[yoyPrevMK,yoyMonth].map((mk,i)=>{
                       const rev=yoyRevenue(mk); const isNewer=i===1;
                       return (
-                        <div key={mk} style={{background:"#2C2C2E",borderRadius:12,padding:"14px",border:`1px solid ${isNewer?"#3B82F6":"#3A3A3C"}`}}>
-                          <div style={{fontSize:11,color:"#8E8E93",marginBottom:4}}>{mthLabel(mk)}</div>
-                          <div style={{fontSize:22,fontWeight:800,color:isNewer?"#3B82F6":"#fff"}}>₪{rev.toLocaleString()}</div>
+                        <div key={mk} style={{background:"var(--bg3)",borderRadius:12,padding:"14px",border:`1px solid ${isNewer?"var(--ac)":"#3A3A3C"}`}}>
+                          <div style={{fontSize:11,color:"var(--mu)",marginBottom:4}}>{mthLabel(mk)}</div>
+                          <div style={{fontSize:22,fontWeight:800,color:isNewer?"var(--ac)":"#fff"}}>₪{rev.toLocaleString()}</div>
                         </div>
                       );
                     })}
@@ -1088,57 +1280,57 @@ export default function App() {
             </div>
 
             {/* Drive */}
-            <div style={{background:"#1C1C1E",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid #2C2C2E"}}>
+            <div style={{background:"var(--bg2)",borderRadius:16,padding:"16px",marginBottom:12,border:"1px solid var(--bd)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={()=>setRevCollapsed(r=>({...r,drive:!r.drive}))}>
                 <div style={{fontSize:14,fontWeight:600}}>Google Drive Backup</div>
-                <span style={{color:"#8E8E93"}}>{revCollapsed.drive?"▸":"▾"}</span>
+                <span style={{color:"var(--mu)"}}>{revCollapsed.drive?"▸":"▾"}</span>
               </div>
               {!revCollapsed.drive&&(
                 <div style={{marginTop:12}}>
-                  <div style={{fontSize:13,color:"#8E8E93",marginBottom:12,lineHeight:1.6}}>On the <strong style={{color:"#fff"}}>1st of every month</strong>, the previous month is auto-exported.</div>
+                  <div style={{fontSize:13,color:"var(--mu)",marginBottom:12,lineHeight:1.6}}>On the <strong style={{color:"var(--fg)"}}>1st of every month</strong>, the previous month is auto-exported.</div>
                   <div style={{display:"flex",gap:8}}>
                     <input value={gasUrl} onChange={e=>setGasUrl(e.target.value)} placeholder="https://script.google.com/macros/s/…/exec"
-                      style={{flex:1,background:"#2C2C2E",border:"1px solid #3A3A3C",borderRadius:10,padding:"10px 14px",color:"#fff",fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
-                    {gasUrl&&<button onClick={()=>setGasUrl("")} style={{background:"#2C2C2E",border:"none",color:"#8E8E93",borderRadius:10,padding:"10px 14px",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13}}>Clear</button>}
+                      style={{flex:1,background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:13,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                    {gasUrl&&<button onClick={()=>setGasUrl("")} style={{background:"var(--bg3)",border:"none",color:"var(--mu)",borderRadius:10,padding:"10px 14px",cursor:"pointer",fontFamily:"'Inter',sans-serif",fontSize:13}}>Clear</button>}
                   </div>
-                  <div style={{marginTop:8,fontSize:12,color:"#8E8E93"}}>
+                  <div style={{marginTop:8,fontSize:12,color:"var(--mu)"}}>
                     {!gasUrl&&"No Drive URL — backups download locally only."}
                     {gasUrl&&driveStatus===null&&<span><span style={{color:"#10B981",marginRight:5}}>●</span>Drive URL saved.</span>}
-                    {driveStatus==="sending"&&<span style={{color:"#3B82F6"}}>Sending to Drive…</span>}
+                    {driveStatus==="sending"&&<span style={{color:"var(--ac)"}}>Sending to Drive…</span>}
                     {driveStatus==="ok"&&<span style={{color:"#10B981"}}>✓ Saved to Drive.</span>}
                     {driveStatus==="error"&&<span style={{color:"#F59E0B"}}>⚠ Drive upload failed.</span>}
                   </div>
-                  {gasUrl&&<button onClick={manualBackupToDrive} style={{marginTop:12,background:"rgba(16,185,129,0.15)",color:"#10B981",border:"1px solid rgba(16,185,129,0.3)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>☁ Save to Drive Now</button>}
-                  <div style={{marginTop:8,fontSize:12,color:"#8E8E93"}}>{autoBackupDone?<span>✓ Last run: {autoBackupDone}</span>:"Will run on the 1st of next month."}</div>
+                  {gasUrl&&<button onClick={manualBackupToDrive} style={{marginTop:12,background:"rgba(52,199,89,0.12)",color:"#10B981",border:"1px solid rgba(16,185,129,0.3)",borderRadius:10,padding:"9px 16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>☁ Save to Drive Now</button>}
+                  <div style={{marginTop:8,fontSize:12,color:"var(--mu)"}}>{autoBackupDone?<span>✓ Last run: {autoBackupDone}</span>:"Will run on the 1st of next month."}</div>
                 </div>
               )}
             </div>
 
             {/* Payment table */}
-            <div style={{background:"#1C1C1E",borderRadius:16,overflow:"hidden",border:"1px solid #2C2C2E"}}>
-              <div style={{padding:"14px 16px",borderBottom:"1px solid #2C2C2E",display:"grid",gridTemplateColumns:"1fr auto auto auto",gap:12}}>
-                <div style={{fontSize:11,color:"#8E8E93",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Member</div>
-                <div style={{fontSize:11,color:"#8E8E93",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Month</div>
-                <div style={{fontSize:11,color:"#8E8E93",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Owed</div>
-                <div style={{fontSize:11,color:"#8E8E93",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Status</div>
+            <div style={{background:"var(--bg2)",borderRadius:16,overflow:"hidden",border:"1px solid var(--bd)"}}>
+              <div style={{padding:"14px 16px",borderBottom:"1px solid var(--bd)",display:"grid",gridTemplateColumns:"1fr auto auto auto",gap:12}}>
+                <div style={{fontSize:11,color:"var(--mu)",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Member</div>
+                <div style={{fontSize:11,color:"var(--mu)",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Month</div>
+                <div style={{fontSize:11,color:"var(--mu)",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Owed</div>
+                <div style={{fontSize:11,color:"var(--mu)",fontWeight:600,textTransform:"uppercase",letterSpacing:.5}}>Status</div>
               </div>
               {alpha(students).filter(s=>!s.archived).map((s,i,arr)=>{
                 const{n,charged}=mSt(s.id); const pay=getPay(s.id,monthKey());
                 return (
-                  <div key={s.id} style={{padding:"14px 16px",borderBottom:i<arr.length-1?"1px solid #2C2C2E":"none",display:"grid",gridTemplateColumns:"1fr auto auto auto",gap:12,alignItems:"center",cursor:"pointer"}}
+                  <div key={s.id} style={{padding:"14px 16px",borderBottom:i<arr.length-1?"1px solid var(--bd)":"none",display:"grid",gridTemplateColumns:"1fr auto auto auto",gap:12,alignItems:"center",cursor:"pointer"}}
                     onClick={()=>{setActive(s.id);setProfTab("history");setModal("profile");}}>
                     <div style={{display:"flex",alignItems:"center",gap:10}}>
                       <Avatar name={s.name} size={36}/>
                       <div>
                         <div style={{fontSize:14,fontWeight:500}}>{s.name}</div>
-                        <div style={{fontSize:11,color:"#8E8E93"}}>{n} class{n!==1?"es":""}</div>
+                        <div style={{fontSize:11,color:"var(--mu)"}}>{n} class{n!==1?"es":""}</div>
                       </div>
                     </div>
-                    <div style={{fontSize:13,color:"#8E8E93"}}>{monthKey().slice(5)}</div>
-                    <div style={{fontSize:14,fontWeight:700,color:"#3B82F6"}}>₪{charged}</div>
+                    <div style={{fontSize:13,color:"var(--mu)"}}>{monthKey().slice(5)}</div>
+                    <div style={{fontSize:14,fontWeight:700,color:"var(--ac)"}}>₪{charged}</div>
                     <div onClick={e=>e.stopPropagation()}>
                       <select value={pay.status} onChange={e=>setPy(s.id,monthKey(),{...pay,status:e.target.value})}
-                        style={{background:"#2C2C2E",border:"1px solid #3A3A3C",borderRadius:8,padding:"5px 8px",color:"#fff",fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",cursor:"pointer"}}>
+                        style={{background:"var(--bg3)",border:"1px solid var(--bd2)",borderRadius:8,padding:"5px 8px",color:"var(--fg)",fontSize:12,fontFamily:"'Inter',sans-serif",outline:"none",cursor:"pointer"}}>
                         <option value="unpaid">Unpaid</option>
                         <option value="partial">Partial</option>
                         <option value="paid">Paid</option>
@@ -1153,34 +1345,34 @@ export default function App() {
 
         {/* ── SESSIONS ── */}
         {view==="sessions"&&(
-          <div style={{padding:"12px 20px 0",animation:"mIn .3s ease"}}>
+          <div key="sessions" className="page-enter" style={{padding:"12px 20px 0"}}>
             <div style={{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"}}>
               {classes.filter(c=>!c.archived).map(c=>(
                 <button key={c.id} onClick={()=>{setSessionViewCls(c.id);setSessionViewDate(null);}}
-                  style={{padding:"9px 16px",borderRadius:10,border:`1px solid ${sessionViewCls===c.id?"#3B82F6":"#2C2C2E"}`,background:sessionViewCls===c.id?"rgba(59,130,246,0.15)":"#1C1C1E",color:sessionViewCls===c.id?"#3B82F6":"#8E8E93",fontFamily:"'Inter',sans-serif",fontSize:13,cursor:"pointer",fontWeight:sessionViewCls===c.id?600:400}}>{c.name}</button>
+                  style={{padding:"9px 16px",borderRadius:10,border:`1px solid ${sessionViewCls===c.id?"var(--ac)":"var(--bg3)"}`,background:sessionViewCls===c.id?"rgba(59,130,246,0.15)":"var(--bg2)",color:sessionViewCls===c.id?"var(--ac)":"#8E8E93",fontFamily:"'Inter',sans-serif",fontSize:13,cursor:"pointer",fontWeight:sessionViewCls===c.id?600:400}}>{c.name}</button>
               ))}
             </div>
-            {!sessionViewCls&&<div style={{background:"#1C1C1E",borderRadius:16,padding:20,textAlign:"center",color:"#8E8E93"}}>Select a class to view its session history.</div>}
+            {!sessionViewCls&&<div style={{background:"var(--bg2)",borderRadius:16,padding:20,textAlign:"center",color:"var(--mu)"}}>Select a class to view its session history.</div>}
             {sessionViewCls&&(()=>{
               const c=classes.find(x=>x.id===sessionViewCls); const dates=allSessionDates(sessionViewCls);
               return (
                 <>
-                  <div style={{fontSize:13,color:"#8E8E93",marginBottom:12}}>{dates.length} sessions for {c?.name}</div>
+                  <div style={{fontSize:13,color:"var(--mu)",marginBottom:12}}>{dates.length} sessions for {c?.name}</div>
                   {dates.map(date=>{
                     const roster=sessionRoster(sessionViewCls,date); const isOpen=sessionViewDate===date;
                     return (
-                      <div key={date} style={{background:"#1C1C1E",borderRadius:16,padding:"14px 16px",marginBottom:8,border:"1px solid #2C2C2E"}}>
+                      <div key={date} style={{background:"var(--bg2)",borderRadius:16,padding:"14px 16px",marginBottom:8,border:"1px solid var(--bd)"}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}} onClick={()=>setSessionViewDate(isOpen?null:date)}>
                           <div>
                             <div style={{fontSize:14,fontWeight:600}}>{fmtDate(date)}</div>
-                            <div style={{fontSize:12,color:"#8E8E93",marginTop:2}}>{roster.length} students present</div>
+                            <div style={{fontSize:12,color:"var(--mu)",marginTop:2}}>{roster.length} students present</div>
                           </div>
-                          <span style={{color:"#8E8E93"}}>{isOpen?"▾":"▸"}</span>
+                          <span style={{color:"var(--mu)"}}>{isOpen?"▾":"▸"}</span>
                         </div>
                         {isOpen&&(
-                          <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid #2C2C2E"}}>
+                          <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid var(--bd)"}}>
                             {roster.map(s=>(
-                              <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #2C2C2E"}}>
+                              <div key={s.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid var(--bd)"}}>
                                 <div style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}} onClick={()=>{setActive(s.id);setProfTab("history");setModal("profile");}}>
                                   <Avatar name={s.name} size={32}/>
                                   <span style={{fontSize:14,fontWeight:500}}>{s.name}</span>
@@ -1200,16 +1392,16 @@ export default function App() {
         )}
 
         {/* ── BOTTOM NAV ── */}
-        <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"rgba(0,0,0,0.95)",backdropFilter:"blur(20px)",borderTop:"1px solid #1C1C1E",padding:"8px 0 28px",zIndex:200}}>
+        <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:"var(--nav-bg)",backdropFilter:"blur(20px)",borderTop:"1px solid var(--bd)",padding:"8px 0 28px",zIndex:200}}>
           <div style={{display:"flex",justifyContent:"space-around"}}>
             {navItems.map(({v,icon,label})=>{
               const active=view===v;
               return (
-                <button key={v} onClick={()=>setView(v)}
+                <button key={v} onClick={()=>setView(v)} className="btn-tap"
                   style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2,background:"transparent",border:"none",cursor:"pointer",padding:"6px 20px",position:"relative"}}>
                   <span style={{fontSize:22,filter:active?"none":"grayscale(1)",opacity:active?1:.5,transition:"all .2s"}}>{icon}</span>
-                  <span style={{fontSize:10,fontWeight:600,color:active?"#3B82F6":"#8E8E93",fontFamily:"'Inter',sans-serif",transition:"color .2s"}}>{label}</span>
-                  {active&&<div style={{position:"absolute",bottom:-2,left:"50%",transform:"translateX(-50%)",width:4,height:4,borderRadius:"50%",background:"#3B82F6"}}/>}
+                  <span style={{fontSize:10,fontWeight:600,color:active?"var(--ac)":"#8E8E93",fontFamily:"'Inter',sans-serif",transition:"color .2s"}}>{label}</span>
+                  {active&&<div style={{position:"absolute",bottom:-2,left:"50%",transform:"translateX(-50%)",width:4,height:4,borderRadius:"50%",background:"var(--ac)"}}/>}
                 </button>
               );
             })}
@@ -1251,39 +1443,39 @@ export default function App() {
                 <Avatar name={student.name} size={64}/>
                 <div>
                   <div style={{fontSize:20,fontWeight:800}}>{student.name}</div>
-                  <div style={{fontSize:13,color:"#8E8E93",marginTop:2}}>Member since {student.joinDate?new Date(student.joinDate).toLocaleString("en",{month:"short",year:"numeric"}):"—"}</div>
+                  <div style={{fontSize:13,color:"var(--mu)",marginTop:2}}>Member since {student.joinDate?new Date(student.joinDate).toLocaleString("en",{month:"short",year:"numeric"}):"—"}</div>
                 </div>
                 <div style={{marginLeft:"auto",display:"flex",gap:8}}>
-                  {student.phone&&<button onClick={()=>window.open(`tel:${student.phone}`)} style={{width:40,height:40,background:"#1C1C1E",border:"1px solid #3A3A3C",borderRadius:12,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>📞</button>}
-                  {student.phone&&<button onClick={()=>setMsgDraft({student,type:"absent"})} style={{width:40,height:40,background:"#1C1C1E",border:"1px solid #3A3A3C",borderRadius:12,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>💬</button>}
+                  {student.phone&&<button onClick={()=>window.open(`tel:${student.phone}`)} style={{width:40,height:40,background:"var(--bg2)",border:"1px solid var(--bd2)",borderRadius:12,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>📞</button>}
+                  {student.phone&&<button onClick={()=>setMsgDraft({student,type:"absent"})} style={{width:40,height:40,background:"var(--bg2)",border:"1px solid var(--bd2)",borderRadius:12,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>💬</button>}
                 </div>
               </div>
 
               {/* Quick actions */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-                <button onClick={()=>setMsgDraft({student,type:"absent"})} style={{background:"#1C1C1E",border:"1px solid #2C2C2E",borderRadius:14,padding:"14px",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>✅ Message</button>
-                <button onClick={()=>window.open(`tel:${student.phone}`)} style={{background:"#1C1C1E",border:"1px solid #2C2C2E",borderRadius:14,padding:"14px",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>🔑 Call</button>
+                <button onClick={()=>setMsgDraft({student,type:"absent"})} style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:14,padding:"14px",color:"var(--fg)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>✅ Message</button>
+                <button onClick={()=>window.open(`tel:${student.phone}`)} style={{background:"var(--bg2)",border:"1px solid var(--bd)",borderRadius:14,padding:"14px",color:"var(--fg)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,fontSize:14,fontWeight:600,fontFamily:"'Inter',sans-serif"}}>🔑 Call</button>
               </div>
 
               {/* Payment Status */}
-              <div style={{background:"#2C2C2E",borderRadius:16,padding:"16px",marginBottom:16}}>
+              <div style={{background:"var(--bg3)",borderRadius:16,padding:"16px",marginBottom:16}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
                   <div style={{fontSize:14,fontWeight:700}}>Payment Status</div>
-                  <span style={{color:"#8E8E93"}}>›</span>
+                  <span style={{color:"var(--mu)"}}>›</span>
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:16}}>
                   <div>
-                    <div style={{fontSize:28,fontWeight:800,color:"#3B82F6"}}>₪{charged}</div>
-                    <div style={{fontSize:13,color:"#8E8E93",marginTop:2}}>Due · {n} class{n!==1?"es":""}</div>
+                    <div style={{fontSize:28,fontWeight:800,color:"var(--ac)"}}>₪{charged}</div>
+                    <div style={{fontSize:13,color:"var(--mu)",marginTop:2}}>Due · {n} class{n!==1?"es":""}</div>
                     {debt>0&&<div style={{fontSize:12,color:"#EF4444",marginTop:2}}>Overdue {Math.round(debt/MONTHLY_MINIMUM*30)} Days</div>}
                   </div>
                   <div style={{marginLeft:"auto",display:"flex",gap:8,flexWrap:"wrap"}}>
-                    <button onClick={()=>setPy(student.id,monthKey(),{status:"paid"})} style={{background:"#3B82F6",color:"#fff",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Record Payment</button>
+                    <button onClick={()=>setPy(student.id,monthKey(),{status:"paid"})} style={{background:"var(--ac)",color:"var(--fg)",border:"none",borderRadius:10,padding:"8px 16px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>Record Payment</button>
                   </div>
                 </div>
                 <div style={{marginTop:12}}>
                   <select value={pay.status} onChange={e=>setPy(student.id,monthKey(),{...pay,status:e.target.value})}
-                    style={{background:"#1C1C1E",border:"1px solid #3A3A3C",borderRadius:8,padding:"7px 12px",color:"#fff",fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none",cursor:"pointer"}}>
+                    style={{background:"var(--bg2)",border:"1px solid var(--bd2)",borderRadius:8,padding:"7px 12px",color:"var(--fg)",fontSize:13,fontFamily:"'Inter',sans-serif",outline:"none",cursor:"pointer"}}>
                     <option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option>
                   </select>
                 </div>
@@ -1298,50 +1490,50 @@ export default function App() {
               </div>
 
               {/* Attendance section */}
-              <div style={{background:"#2C2C2E",borderRadius:16,padding:"16px",marginBottom:16}}>
+              <div style={{background:"var(--bg3)",borderRadius:16,padding:"16px",marginBottom:16}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:12}}>
                   <div style={{fontSize:14,fontWeight:700}}>Attendance</div>
-                  <span style={{color:"#8E8E93"}}>›</span>
+                  <span style={{color:"var(--mu)"}}>›</span>
                 </div>
                 {attHist.slice(0,3).map((a,i)=>{
                   const pct=Math.min(100,Math.max(20,40+i*20));
                   return (
-                    <div key={i} style={{display:"grid",gridTemplateColumns:"auto 1fr auto",gap:12,alignItems:"center",padding:"8px 0",borderBottom:i<2?"1px solid #3A3A3C":"none"}}>
+                    <div key={i} style={{display:"grid",gridTemplateColumns:"auto 1fr auto",gap:12,alignItems:"center",padding:"8px 0",borderBottom:i<2?"1px solid var(--bd2)":"none"}}>
                       <div style={{textAlign:"center"}}>
                         <div style={{fontSize:18,fontWeight:800}}>{new Date(a.date).getDate()}</div>
-                        <div style={{fontSize:10,color:"#8E8E93",textTransform:"uppercase"}}>{new Date(a.date).toLocaleString("en",{month:"short"})}</div>
+                        <div style={{fontSize:10,color:"var(--mu)",textTransform:"uppercase"}}>{new Date(a.date).toLocaleString("en",{month:"short"})}</div>
                       </div>
                       <div>
                         <div style={{fontSize:13,fontWeight:500,color:"#10B981"}}>{a.className}</div>
-                        <div style={{fontSize:11,color:"#8E8E93"}}>Present</div>
+                        <div style={{fontSize:11,color:"var(--mu)"}}>Present</div>
                       </div>
                       <div style={{display:"flex",alignItems:"center",gap:6}}>
-                        <div style={{width:40,height:4,borderRadius:2,background:"#3A3A3C",overflow:"hidden"}}><div style={{width:`${pct}%`,height:"100%",background:"#10B981",borderRadius:2}}/></div>
+                        <div style={{width:40,height:4,borderRadius:2,background:"var(--bd2)",overflow:"hidden"}}><div style={{width:`${pct}%`,height:"100%",background:"#10B981",borderRadius:2}}/></div>
                         <span style={{fontSize:10,color:"#10B981",fontWeight:600}}>{pct}</span>
                         <span style={{width:8,height:8,borderRadius:"50%",background:"#10B981",display:"inline-block"}}/>
                       </div>
                     </div>
                   );
                 })}
-                {attHist.length===0&&<div style={{fontSize:13,color:"#8E8E93"}}>No attendance recorded.</div>}
+                {attHist.length===0&&<div style={{fontSize:13,color:"var(--mu)"}}>No attendance recorded.</div>}
               </div>
 
               {/* Tabs */}
-              <div style={{display:"flex",gap:2,marginBottom:16,background:"#2C2C2E",borderRadius:12,padding:4}}>
+              <div style={{display:"flex",gap:2,marginBottom:16,background:"var(--bg3)",borderRadius:12,padding:4}}>
                 {[["history","Class History"],["notes","Notes ("+stNotes.length+")"],["followup","Follow-ups"]].map(([t,l])=>(
                   <button key={t} onClick={()=>setProfTab(t)}
-                    style={{flex:1,padding:"8px 12px",borderRadius:9,border:"none",background:profTab===t?"#1C1C1E":"transparent",color:profTab===t?"#fff":"#8E8E93",fontFamily:"'Inter',sans-serif",fontSize:12,cursor:"pointer",fontWeight:profTab===t?600:400,transition:"all .15s"}}>{l}</button>
+                    style={{flex:1,padding:"8px 12px",borderRadius:9,border:"none",background:profTab===t?"var(--bg2)":"transparent",color:profTab===t?"#fff":"#8E8E93",fontFamily:"'Inter',sans-serif",fontSize:12,cursor:"pointer",fontWeight:profTab===t?600:400,transition:"all .15s"}}>{l}</button>
                 ))}
               </div>
 
               {profTab==="history"&&(
                 <div>
-                  <div style={{fontSize:12,color:"#8E8E93",marginBottom:10}}>{attHist.length} sessions total · {yN(student.id)} this year</div>
+                  <div style={{fontSize:12,color:"var(--mu)",marginBottom:10}}>{attHist.length} sessions total · {yN(student.id)} this year</div>
                   <div style={{maxHeight:200,overflowY:"auto"}}>
-                    {attHist.length===0&&<div style={{color:"#8E8E93",fontSize:14}}>No attendance recorded.</div>}
+                    {attHist.length===0&&<div style={{color:"var(--mu)",fontSize:14}}>No attendance recorded.</div>}
                     {attHist.map((a,i)=>(
-                      <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid #2C2C2E",fontSize:13}}>
-                        <span style={{color:"#8E8E93"}}>{fmtDate(a.date)}</span>
+                      <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid var(--bd)",fontSize:13}}>
+                        <span style={{color:"var(--mu)"}}>{fmtDate(a.date)}</span>
                         <span style={{color:"#10B981"}}>{a.className}</span>
                       </div>
                     ))}
@@ -1353,15 +1545,15 @@ export default function App() {
                 <div>
                   <div style={{display:"flex",gap:8,marginBottom:12}}>
                     <input value={noteInput} onChange={e=>setNoteInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&noteInput.trim()){addNote(student.id,noteInput);setNoteInput("");}}} placeholder="Add a note… (Enter to save)"
-                      style={{flex:1,background:"#2C2C2E",border:"1.5px solid #3A3A3C",borderRadius:10,padding:"10px 14px",color:"#fff",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                      style={{flex:1,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
                     <Btn onClick={()=>{addNote(student.id,noteInput);setNoteInput("");}}>Add</Btn>
                   </div>
                   <div style={{maxHeight:220,overflowY:"auto"}}>
-                    {stNotes.length===0&&<div style={{color:"#8E8E93",fontSize:14}}>No notes yet.</div>}
+                    {stNotes.length===0&&<div style={{color:"var(--mu)",fontSize:14}}>No notes yet.</div>}
                     {stNotes.map(n=>(
-                      <div key={n.id} style={{padding:"10px 0",borderBottom:"1px solid #2C2C2E"}}>
+                      <div key={n.id} style={{padding:"10px 0",borderBottom:"1px solid var(--bd)"}}>
                         <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                          <span style={{fontSize:11,color:"#8E8E93"}}>{fmtTs(n.ts)}</span>
+                          <span style={{fontSize:11,color:"var(--mu)"}}>{fmtTs(n.ts)}</span>
                           <button onClick={()=>deleteNote(student.id,n.id)} style={{background:"none",border:"none",color:"#EF4444",cursor:"pointer",fontSize:13}}>🗑</button>
                         </div>
                         <div style={{fontSize:14,lineHeight:1.5}}>{n.text}</div>
@@ -1377,18 +1569,18 @@ export default function App() {
                   <div>
                     <div style={{display:"flex",gap:8,marginBottom:12}}>
                       <input value={fupInput} onChange={e=>setFupInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&fupInput.trim()){addFollowUp(student.id,fupInput);setFupInput("");}}} placeholder="Log a follow-up… (Enter to save)"
-                        style={{flex:1,background:"#2C2C2E",border:"1.5px solid #3A3A3C",borderRadius:10,padding:"10px 14px",color:"#fff",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
+                        style={{flex:1,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"10px 14px",color:"var(--fg)",fontSize:14,outline:"none",fontFamily:"'Inter',sans-serif"}}/>
                       <Btn onClick={()=>{addFollowUp(student.id,fupInput);setFupInput("");}}>Add</Btn>
                     </div>
                     <div style={{maxHeight:200,overflowY:"auto"}}>
-                      {fups.length===0&&<div style={{color:"#8E8E93",fontSize:14}}>No follow-ups logged yet.</div>}
-                      {fups.map(f=>(<div key={f.id} style={{padding:"10px 0",borderBottom:"1px solid #2C2C2E"}}><div style={{fontSize:11,color:"#8E8E93",marginBottom:3}}>{fmtTs(f.ts)}</div><div style={{fontSize:14,lineHeight:1.5}}>{f.text}</div></div>))}
+                      {fups.length===0&&<div style={{color:"var(--mu)",fontSize:14}}>No follow-ups logged yet.</div>}
+                      {fups.map(f=>(<div key={f.id} style={{padding:"10px 0",borderBottom:"1px solid var(--bd)"}}><div style={{fontSize:11,color:"var(--mu)",marginBottom:3}}>{fmtTs(f.ts)}</div><div style={{fontSize:14,lineHeight:1.5}}>{f.text}</div></div>))}
                     </div>
                   </div>
                 );
               })()}
 
-              <div style={{marginTop:16,paddingTop:14,borderTop:"1px solid #2C2C2E",display:"flex",gap:8,flexWrap:"wrap"}}>
+              <div style={{marginTop:16,paddingTop:14,borderTop:"1px solid var(--bd)",display:"flex",gap:8,flexWrap:"wrap"}}>
                 <Btn variant="ghost" onClick={()=>{setModal("editStudent");setForm({});}}>Edit Profile</Btn>
                 <Btn variant="amber" onClick={()=>setMsgDraft({student,type:"payment"})}>💬 Payment Reminder</Btn>
                 {student.birthday&&<Btn variant="subtle" size="sm" onClick={()=>setMsgDraft({student,type:"birthday"})}>🎂 Birthday</Btn>}
@@ -1401,8 +1593,8 @@ export default function App() {
           <Modal title="Add Class" onClose={()=>setModal(null)}>
             <Inp label="Class Name" value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})}/>
             <div style={{marginBottom:14}}>
-              <label style={{display:"block",fontSize:11,color:"#8E8E93",marginBottom:6,fontWeight:500}}>Day</label>
-              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"#2C2C2E",border:"1.5px solid #3A3A3C",borderRadius:10,padding:"12px 14px",color:"#fff",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}>
+              <label style={{display:"block",fontSize:11,color:"var(--mu)",marginBottom:6,fontWeight:500}}>Day</label>
+              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}>
                 {DAYS.slice(0,6).map(d=><option key={d}>{d}</option>)}
               </select>
             </div>
@@ -1419,8 +1611,8 @@ export default function App() {
           <Modal title="Edit Class" onClose={()=>setModal(null)}>
             <Inp label="Class Name" value={form.name||""} onChange={e=>setForm({...form,name:e.target.value})}/>
             <div style={{marginBottom:14}}>
-              <label style={{display:"block",fontSize:11,color:"#8E8E93",marginBottom:6,fontWeight:500}}>Day</label>
-              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"#2C2C2E",border:"1.5px solid #3A3A3C",borderRadius:10,padding:"12px 14px",color:"#fff",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}>
+              <label style={{display:"block",fontSize:11,color:"var(--mu)",marginBottom:6,fontWeight:500}}>Day</label>
+              <select value={form.day||"Monday"} onChange={e=>setForm({...form,day:e.target.value})} style={{width:"100%",background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:15,outline:"none",fontFamily:"'Inter',sans-serif"}}>
                 {DAYS.slice(0,6).map(d=><option key={d}>{d}</option>)}
               </select>
             </div>
@@ -1450,9 +1642,9 @@ export default function App() {
           const s=msgDraft.student;
           return (
             <Modal title="Message Draft" onClose={()=>{setMsgDraft(null);setMsgTxt("");}}>
-              <div style={{fontSize:13,color:"#8E8E93",marginBottom:12}}>For: <strong style={{color:"#fff"}}>{s.name}</strong></div>
+              <div style={{fontSize:13,color:"var(--mu)",marginBottom:12}}>For: <strong style={{color:"var(--fg)"}}>{s.name}</strong></div>
               <textarea value={txt} onChange={e=>setMsgTxt(e.target.value)}
-                style={{width:"100%",minHeight:140,background:"#2C2C2E",border:"1.5px solid #3A3A3C",borderRadius:10,padding:"12px 14px",color:"#fff",fontSize:14,fontFamily:"'Inter',sans-serif",resize:"vertical",outline:"none",marginBottom:14}}/>
+                style={{width:"100%",minHeight:140,background:"var(--bg3)",border:"1.5px solid var(--bd2)",borderRadius:10,padding:"12px 14px",color:"var(--fg)",fontSize:14,fontFamily:"'Inter',sans-serif",resize:"vertical",outline:"none",marginBottom:14}}/>
               <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                 {s.phone&&<Btn variant="green" onClick={()=>window.open(`https://wa.me/${s.phone.replace(/[^0-9]/g,"")}?text=${encodeURIComponent(txt)}`)}>📱 WhatsApp</Btn>}
                 {s.email&&<Btn variant="ghost" onClick={()=>window.open(`mailto:${s.email}?body=${encodeURIComponent(txt)}`)}>✉ Email</Btn>}
@@ -1465,10 +1657,10 @@ export default function App() {
         {/* SIDE MENU */}
         {menuOpen&&(
           <div onClick={()=>setMenuOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",zIndex:400,backdropFilter:"blur(8px)",animation:"fadeIn .2s ease"}}>
-            <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,right:0,width:"80%",maxWidth:320,height:"100%",background:"#1C1C1E",borderLeft:"1px solid #2C2C2E",display:"flex",flexDirection:"column",animation:"slideIn .3s cubic-bezier(.4,0,.2,1)"}}>
-              <div style={{padding:"52px 20px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid #2C2C2E"}}>
+            <div onClick={e=>e.stopPropagation()} style={{position:"absolute",top:0,right:0,width:"80%",maxWidth:320,height:"100%",background:"var(--bg2)",borderLeft:"1px solid var(--bd)",display:"flex",flexDirection:"column",animation:"slideIn .3s cubic-bezier(.4,0,.2,1)"}}>
+              <div style={{padding:"52px 20px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:"1px solid var(--bd)"}}>
                 <span style={{fontSize:18,fontWeight:700}}>Menu</span>
-                <button onClick={()=>setMenuOpen(false)} style={{width:32,height:32,borderRadius:8,border:"1px solid #3A3A3C",background:"#2C2C2E",color:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+                <button onClick={()=>setMenuOpen(false)} style={{width:32,height:32,borderRadius:8,border:"1px solid var(--bd2)",background:"var(--bg3)",color:"var(--fg)",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
               </div>
               <div style={{flex:1,overflowY:"auto",paddingBottom:16}}>
                 {[
@@ -1487,16 +1679,16 @@ export default function App() {
                   ]},
                 ].map(({label,items})=>(
                   <div key={label}>
-                    <div style={{fontSize:10,color:"#8E8E93",fontWeight:700,textTransform:"uppercase",letterSpacing:1,padding:"14px 20px 6px"}}>{label}</div>
+                    <div style={{fontSize:10,color:"var(--mu)",fontWeight:700,textTransform:"uppercase",letterSpacing:1,padding:"14px 20px 6px"}}>{label}</div>
                     {items.map(({v,icon,label:lbl,sub,badge})=>{
                       const act=view===v;
                       return (
                         <div key={v} onClick={()=>{setView(v);setMenuOpen(false);}}
-                          style={{display:"flex",alignItems:"center",gap:12,padding:"12px 20px",cursor:"pointer",background:act?"rgba(59,130,246,0.1)":"transparent",borderLeft:`3px solid ${act?"#3B82F6":"transparent"}`,transition:"all .15s"}}>
-                          <div style={{width:36,height:36,borderRadius:10,background:act?"rgba(59,130,246,0.2)":"#2C2C2E",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{icon}</div>
+                          style={{display:"flex",alignItems:"center",gap:12,padding:"12px 20px",cursor:"pointer",background:act?"rgba(59,130,246,0.1)":"transparent",borderLeft:`3px solid ${act?"var(--ac)":"transparent"}`,transition:"all .15s"}}>
+                          <div style={{width:36,height:36,borderRadius:10,background:act?"rgba(59,130,246,0.2)":"var(--bg3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>{icon}</div>
                           <div style={{flex:1}}>
-                            <div style={{fontSize:14,fontWeight:500,color:"#fff"}}>{lbl}</div>
-                            <div style={{fontSize:11,color:"#8E8E93"}}>{sub}</div>
+                            <div style={{fontSize:14,fontWeight:500,color:"var(--fg)"}}>{lbl}</div>
+                            <div style={{fontSize:11,color:"var(--mu)"}}>{sub}</div>
                           </div>
                           {badge&&<span style={{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:10,background:"rgba(239,68,68,0.15)",color:"#EF4444",border:"1px solid rgba(239,68,68,0.3)"}}>{badge}</span>}
                         </div>
@@ -1505,12 +1697,23 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <div style={{padding:"16px 20px 40px",borderTop:"1px solid #2C2C2E"}}>
+              <div style={{padding:"16px 20px 40px",borderTop:"1px solid var(--bd)"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <span style={{fontSize:14,color:"#8E8E93"}}>Dark mode</span>
-                  <div onClick={()=>setDarkMode(!darkMode)} style={{width:50,height:28,borderRadius:14,cursor:"pointer",position:"relative",transition:"background .2s",background:darkMode?"#3B82F6":"#2C2C2E"}}>
+                  <span style={{fontSize:14,color:"var(--mu)"}}>{isHe?"מצב לילה":"Dark mode"}</span>
+                  <div onClick={()=>setDarkMode(!darkMode)} style={{width:50,height:28,borderRadius:14,cursor:"pointer",position:"relative",transition:"background .2s",background:darkMode?"var(--ac)":"var(--bg3)"}}>
                     <div style={{position:"absolute",top:4,left:darkMode?26:4,width:20,height:20,borderRadius:"50%",background:"#fff",transition:"left .2s"}}/>
                   </div>
+                </div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:12}}>
+                <span style={{fontSize:14,color:"var(--mu)"}}>{isHe?"שפה":"Language"}</span>
+                <div style={{display:"flex",background:"var(--bg3)",borderRadius:10,padding:2,border:"1px solid var(--bd2)"}}>
+                  {["he","en"].map(l=>(
+                    <button key={l} onClick={()=>setLangAndStore(l)}
+                      style={{padding:"5px 12px",borderRadius:8,border:"none",background:lang===l?"var(--ac)":"transparent",color:lang===l?"#fff":"var(--mu)",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",transition:"all .2s"}}>
+                      {l==="he"?"עברית":"English"}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
