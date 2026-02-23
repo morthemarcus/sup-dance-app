@@ -6,12 +6,11 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-"dependencies": {
-  "react": "^18.2.0",
-  "react-dom": "^18.2.0",
-  "xlsx": "^0.18.5",
-  "xlsx-style": "^0.8.13"
-}
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5",
+    "xlsx-style": "^0.8.13"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",
